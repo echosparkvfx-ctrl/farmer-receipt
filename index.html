@@ -308,6 +308,7 @@ footer{
   .receipt-paper::before, .receipt-paper::after{display:none;}
 }
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body>
 <header class="topbar">
@@ -444,7 +445,8 @@ footer{
     <div id="receiptPaper" class="receipt-paper"></div>
     <textarea id="receiptText" class="visually-hidden" readonly></textarea>
     <div class="modal-actions">
-      <a id="whatsappLink" class="primary-btn" target="_blank" rel="noopener" data-te="WhatsApp లో పంపండి" data-en="Send via WhatsApp">WhatsApp లో పంపండి</a>
+      <button id="sharePhotoBtn" class="primary-btn" data-te="WhatsApp లో ఫోటో పంపండి" data-en="Send Photo via WhatsApp">WhatsApp లో ఫోటో పంపండి</button>
+      <a id="whatsappLink" class="secondary-btn" target="_blank" rel="noopener" data-te="టెక్స్ట్ పంపండి" data-en="Send as Text">టెక్స్ట్ పంపండి</a>
       <button id="printReceipt" class="secondary-btn" data-te="ప్రింట్" data-en="Print">ప్రింట్</button>
       <button id="copyReceipt" class="secondary-btn" data-te="కాపీ చేయండి" data-en="Copy Text">కాపీ చేయండి</button>
       <button id="closeReceipt" class="secondary-btn" data-te="మూసివేయండి" data-en="Close">మూసివేయండి</button>
@@ -743,10 +745,13 @@ const receiptModal = $('receiptModal');
 const receiptText = $('receiptText');
 const receiptPaper = $('receiptPaper');
 const whatsappLink = $('whatsappLink');
+const sharePhotoBtn = $('sharePhotoBtn');
+let currentReceiptSale = null;
 
 function shareReceipt(id){
   const s = sales.find(x => x.id === id);
   if (!s) return;
+  currentReceiptSale = s;
   const text = buildReceiptText(s);
 
   receiptPaper.innerHTML = buildReceiptHTML(s);
@@ -756,6 +761,43 @@ function shareReceipt(id){
   whatsappLink.href = `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
   receiptModal.classList.remove('hidden');
 }
+
+async function shareReceiptAsPhoto(){
+  if (!currentReceiptSale || typeof html2canvas === 'undefined') return;
+  const btn = sharePhotoBtn;
+  const originalText = btn.textContent;
+  btn.textContent = lang === 'te' ? 'తయారు చేస్తోంది...' : 'Preparing...';
+  btn.disabled = true;
+  try {
+    const canvas = await html2canvas(receiptPaper, { scale: 2, backgroundColor: '#ffffff' });
+    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+    const fileName = `receipt_${(currentReceiptSale.farmerName || 'farmer').replace(/\s+/g,'_')}_${currentReceiptSale.date}.png`;
+    const file = new File([blob], fileName, { type: 'image/png' });
+
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({ files: [file], title: 'Farmer Receipt' });
+    } else {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      a.click();
+      URL.revokeObjectURL(url);
+      alert(lang === 'te'
+        ? 'రసీదు ఫోటో డౌన్‌లోడ్ అయ్యింది. దీన్ని WhatsApp లో అటాచ్ చేసి పంపండి.'
+        : 'Receipt photo downloaded. Attach it in WhatsApp to send.');
+    }
+  } catch (err) {
+    if (err.name !== 'AbortError') {
+      alert(lang === 'te' ? 'ఫోటో తయారు చేయడంలో సమస్య వచ్చింది.' : 'Could not prepare the photo.');
+    }
+  } finally {
+    btn.textContent = originalText;
+    btn.disabled = false;
+  }
+}
+
+sharePhotoBtn.addEventListener('click', shareReceiptAsPhoto);
 
 $('closeReceipt').addEventListener('click', () => receiptModal.classList.add('hidden'));
 receiptModal.addEventListener('click', (e) => {
