@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="te">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ఖమ్మం గ్రెయిన్ మార్కెట్ | Khammam Grain Market</title>
+<style>
+:root{
+  --bg:#f4f1ea;
+  --card:#ffffff;
+  --primary:#8a5a2c;
+  --primary-dark:#6e4520;
+  --accent:#2f7d4f;
+  --text:#2b2418;
+  --muted:#7a6f5d;
+  --border:#e1d9c8;
+  --danger:#b8443a;
+}
+*{box-sizing:border-box;}
+body{
+  margin:0;
+  font-family:'Noto Sans Telugu','Segoe UI',sans-serif;
+  background:var(--bg);
+  color:var(--text);
+}
+.topbar{
+  background:linear-gradient(120deg,var(--primary),var(--primary-dark));
+  color:#fff;
+  padding:16px 20px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+.topbar h1{margin:0;font-size:1.3rem;}
+.lang-btn{
+  background:#fff2;
+  border:1px solid #fff5;
+  color:#fff;
+  padding:6px 14px;
+  border-radius:8px;
+  cursor:pointer;
+  font-weight:600;
+}
+main{
+  max-width:1100px;
+  margin:0 auto;
+  padding:16px;
+  display:flex;
+  flex-direction:column;
+  gap:16px;
+}
+.card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:16px 18px;
+  box-shadow:0 1px 3px rgba(0,0,0,.04);
+}
+.card h2{margin-top:0;font-size:1.05rem;color:var(--primary-dark);}
+.grid-form{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+  gap:12px;
+}
+label{display:flex;flex-direction:column;gap:4px;font-size:.85rem;color:var(--muted);}
+input,select{
+  padding:9px 10px;
+  border:1px solid var(--border);
+  border-radius:8px;
+  font-size:.95rem;
+  background:#fffdfa;
+  color:var(--text);
+}
+input:focus,select:focus{outline:2px solid var(--primary);outline-offset:1px;}
+.calc-preview{
+  grid-column:1/-1;
+  display:flex;
+  gap:20px;
+  flex-wrap:wrap;
+  background:#faf6ee;
+  border:1px dashed var(--border);
+  border-radius:8px;
+  padding:10px 14px;
+  font-size:.9rem;
+}
+.calc-preview b{color:var(--accent);}
+.form-actions{grid-column:1/-1;display:flex;gap:10px;}
+.primary-btn{
+  background:var(--primary);
+  color:#fff;
+  border:none;
+  padding:10px 20px;
+  border-radius:8px;
+  cursor:pointer;
+  font-weight:600;
+}
+.primary-btn:hover{background:var(--primary-dark);}
+.secondary-btn{
+  background:#fff;
+  color:var(--primary-dark);
+  border:1px solid var(--border);
+  padding:10px 16px;
+  border-radius:8px;
+  cursor:pointer;
+}
+.secondary-btn:hover{background:#f0ece0;}
+.summary-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+  gap:12px;
+}
+.stat{
+  background:#faf6ee;
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:12px;
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  font-size:.8rem;
+  color:var(--muted);
+}
+.stat b{font-size:1.15rem;color:var(--primary-dark);}
+.table-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:10px;
+}
+.table-controls{display:flex;gap:8px;flex-wrap:wrap;}
+.table-controls input{padding:8px 10px;border:1px solid var(--border);border-radius:8px;}
+
+.records-list{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
+  gap:12px;
+  margin-top:12px;
+}
+.record-card{
+  border:1px solid var(--border);
+  border-radius:10px;
+  background:#faf6ee;
+  padding:12px 14px;
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  font-size:.88rem;
+}
+.record-card .rc-top{
+  display:flex;
+  justify-content:space-between;
+  align-items:baseline;
+  font-weight:700;
+  color:var(--primary-dark);
+}
+.record-card .rc-date{font-size:.78rem;color:var(--muted);font-weight:500;}
+.record-card .rc-sub{color:var(--muted);font-size:.82rem;}
+.record-card .rc-row{display:flex;justify-content:space-between;gap:8px;}
+.record-card .rc-row span:first-child{color:var(--muted);}
+.record-card .rc-net{
+  display:flex;
+  justify-content:space-between;
+  border-top:1px dashed var(--border);
+  margin-top:4px;
+  padding-top:6px;
+  font-weight:700;
+}
+.record-card .rc-net b{color:var(--accent);font-size:1.02rem;}
+.rc-actions{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;}
+.rc-actions button{
+  flex:1;
+  min-width:70px;
+  min-height:38px;
+  border-radius:8px;
+  border:1px solid var(--border);
+  background:#fff;
+  cursor:pointer;
+  font-size:.85rem;
+  font-weight:600;
+}
+.rc-actions .share-btn{background:#e7f5ec;color:#1f6b3f;border-color:#c9e8d3;}
+.rc-actions .edit-btn{color:var(--accent);}
+.rc-actions .delete-btn{color:var(--danger);}
+.rc-actions button:active{transform:scale(.97);}
+
+.empty-msg{text-align:center;color:var(--muted);padding:20px;}
+footer{
+  text-align:center;
+  color:var(--muted);
+  font-size:.8rem;
+  padding:20px;
+}
+@media (max-width:600px){
+  .topbar h1{font-size:1.05rem;}
+  .records-list{grid-template-columns:1fr;}
+  input,select,button{font-size:16px;}
+}
+
+.modal-overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(20,15,8,.6);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:16px;
+  z-index:50;
+}
+.modal-overlay.hidden{display:none;}
+.modal-box{
+  background:#d8d2c4;
+  border-radius:12px;
+  padding:18px;
+  width:100%;
+  max-width:360px;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  max-height:92vh;
+  overflow-y:auto;
+}
+.visually-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);}
+
+.receipt-paper{
+  background:#fff;
+  color:#2b2418;
+  font-family:'Segoe UI',sans-serif;
+  padding:0;
+  margin-top:10px;
+  border-radius:10px;
+  overflow:hidden;
+  box-shadow:0 4px 14px rgba(0,0,0,.18);
+  border:1px solid #e1d9c8;
+}
+.rp-header{
+  background:linear-gradient(120deg,#8a5a2c,#6e4520);
+  color:#fff;
+  padding:16px 18px;
+}
+.rp-header h3{margin:0;font-size:1.15rem;letter-spacing:.3px;}
+.rp-header .rp-meta{
+  display:flex;
+  justify-content:space-between;
+  font-size:.75rem;
+  opacity:.9;
+  margin-top:6px;
+}
+.rp-body{padding:16px 18px;}
+.rp-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px 16px;
+  margin-bottom:14px;
+}
+.rp-field span{display:block;font-size:.7rem;color:#7a6f5d;text-transform:uppercase;letter-spacing:.4px;margin-bottom:2px;}
+.rp-field b{font-size:.88rem;color:#2b2418;font-weight:600;}
+.rp-table{width:100%;border-collapse:collapse;font-size:.85rem;margin-bottom:4px;}
+.rp-table td{padding:7px 0;border-bottom:1px solid #f0ece0;}
+.rp-table td:last-child{text-align:right;font-weight:600;}
+.rp-table tr.rp-sub td{color:#7a6f5d;font-size:.8rem;}
+.rp-net{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  background:#faf6ee;
+  border-radius:8px;
+  padding:12px 14px;
+  margin-top:10px;
+}
+.rp-net span{font-weight:700;color:#6e4520;}
+.rp-net b{color:#2f7d4f;font-size:1.25rem;}
+.rp-footer{
+  padding:12px 18px 16px;
+  border-top:1px dashed #e1d9c8;
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-end;
+  font-size:.72rem;
+  color:#7a6f5d;
+}
+.rp-sign{text-align:right;}
+.rp-sign .rp-sign-line{border-top:1px solid #999;margin-top:22px;padding-top:4px;width:120px;}
+
+.modal-actions{display:flex;flex-direction:column;gap:8px;}
+.modal-actions .primary-btn{text-align:center;text-decoration:none;}
+
+@media print{
+  @page{ margin: 8mm; }
+  body > header, body > main, body > footer{display:none !important;}
+  #receiptModal{
+    position:static;
+    background:none;
+    padding:0;
+    display:block;
+  }
+  #receiptModal .modal-box{
+    background:none;
+    box-shadow:none;
+    padding:0;
+    max-width:none;
+    max-height:none;
+    overflow:visible;
+    display:block;
+  }
+  #receiptModal .modal-actions, #receiptModal textarea{display:none;}
+  .receipt-paper{width:80mm;margin:0 auto;box-shadow:none;position:static;}
+  .receipt-paper::before, .receipt-paper::after{display:none;}
+}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <h1 id="appTitle">ఖమ్మం గ్రెయిన్ మార్కెట్</h1>
+  <button id="langToggle" class="lang-btn">EN</button>
+</header>
+
+<main>
+  <section class="card">
+    <h2 data-te="కొత్త అమ్మకం నమోదు" data-en="New Sale Entry">కొత్త అమ్మకం నమోదు</h2>
+    <form id="saleForm" class="grid-form">
+      <label>
+        <span data-te="తేదీ" data-en="Date">తేదీ</span>
+        <input type="date" id="date" required>
+      </label>
+      <label>
+        <span data-te="రైతు పేరు" data-en="Farmer Name">రైతు పేరు</span>
+        <input type="text" id="farmerName" required autocomplete="off">
+      </label>
+      <label>
+        <span data-te="రైతు ఫోన్ (ఐచ్ఛికం)" data-en="Farmer Phone (optional)">రైతు ఫోన్ (ఐచ్ఛికం)</span>
+        <input type="tel" id="farmerPhone" autocomplete="off">
+      </label>
+      <label>
+        <span data-te="గ్రామం" data-en="Village">గ్రామం</span>
+        <input type="text" id="village" list="villageList" autocomplete="off">
+        <datalist id="villageList">
+          <option value="ఖమ్మం అర్బన్ / Khammam Urban">
+          <option value="ఖమ్మం రూరల్ / Khammam Rural">
+          <option value="కూసుమంచి / Kusumanchi">
+          <option value="కల్లూరు / Kallur">
+          <option value="కొణిజర్ల / Konijerla">
+          <option value="నేలకొండపల్లి / Nelakondapalli">
+          <option value="మధిర / Madhira">
+          <option value="వైరా / Wyra">
+          <option value="ఎంకూరు / Enkuru">
+          <option value="తల్లాడ / Thallada">
+          <option value="బోనకల్ / Bonakal">
+          <option value="ఏర్రుపాలెం / Yerrupalem">
+          <option value="ముదిగొండ / Mudigonda">
+          <option value="సత్తుపల్లి / Sathupalli">
+          <option value="పెనుబల్లి / Penuballi">
+          <option value="తిరుమలాయపాలెం / Tirumalayapalem">
+          <option value="వేంసూరు / Vemsoor">
+          <option value="చింతకని / Chinthakani">
+          <option value="రఘునాథపాలెం / Raghunathapalem">
+          <option value="సింగరేణి / Singareni">
+        </datalist>
+      </label>
+      <label>
+        <span data-te="ధాన్యం రకం" data-en="Grain Type">ధాన్యం రకం</span>
+        <select id="grainType">
+          <option value="వరి / Paddy">వరి / Paddy</option>
+          <option value="మొక్కజొన్న / Maize">మొక్కజొన్న / Maize</option>
+          <option value="పత్తి / Cotton">పత్తి / Cotton</option>
+          <option value="మిర్చి / Chilli">మిర్చి / Chilli</option>
+          <option value="పప్పు దినుసులు / Pulses">పప్పు దినుసులు / Pulses</option>
+          <option value="ఇతర / Other">ఇతర / Other</option>
+        </select>
+      </label>
+      <label>
+        <span data-te="బస్తాలు (సంఖ్య)" data-en="No. of Bags">బస్తాలు (సంఖ్య)</span>
+        <input type="number" id="bags" min="0" step="1">
+      </label>
+      <label>
+        <span data-te="బరువు (కిలోలు)" data-en="Weight (KG)">బరువు (కిలోలు)</span>
+        <input type="number" id="weight" min="0" step="0.01" required>
+      </label>
+      <label>
+        <span data-te="రేటు (₹ / క్వింటాల్)" data-en="Rate (₹ / Quintal)">రేటు (₹ / క్వింటాల్)</span>
+        <input type="number" id="rate" min="0" step="0.01" required>
+      </label>
+      <label>
+        <span data-te="కమిషన్ %" data-en="Commission %">కమిషన్ %</span>
+        <input type="number" id="commissionPct" min="0" step="0.01" value="2">
+      </label>
+      <label>
+        <span data-te="హమాలీ (₹ / బస్తా)" data-en="Hamali (₹ / Bag)">హమాలీ (₹ / బస్తా)</span>
+        <input type="number" id="hamaliRateInput" min="0" step="0.01" value="0">
+      </label>
+      <label>
+        <span data-te="ఇతర ఖర్చులు (₹)" data-en="Other Deductions (₹)">ఇతర ఖర్చులు (₹)</span>
+        <input type="number" id="otherDeduction" min="0" step="0.01" value="0">
+      </label>
+
+      <div class="calc-preview" id="calcPreview">
+        <div><span data-te="విలువ (బరువు × రేటు)" data-en="Value (Weight × Rate)">విలువ (బరువు × రేటు)</span>: <b id="prevEffRate">₹0</b></div>
+        <div><span data-te="+ బస్తా ఖర్చు (₹40/బస్తా)" data-en="+ Bag Charge (₹40/Bag)">+ బస్తా ఖర్చు (₹40/బస్తా)</span>: <b id="prevBagCharge">₹0</b></div>
+        <div><span data-te="మొత్తం విలువ" data-en="Total Value">మొత్తం విలువ</span>: <b id="prevTotal">₹0</b></div>
+        <div><span data-te="కమిషన్" data-en="Commission">కమిషన్</span>: <b id="prevCommission">₹0</b></div>
+        <div><span data-te="హమాలీ" data-en="Hamali">హమాలీ</span>: <b id="prevHamali">₹0</b></div>
+        <div><span data-te="రైతుకు చెల్లించవలసినది" data-en="Payable to Farmer">రైతుకు చెల్లించవలసినది</span>: <b id="prevNet">₹0</b></div>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="primary-btn" data-te="సేవ్ చేయండి" data-en="Save Entry">సేవ్ చేయండి</button>
+        <button type="button" id="resetForm" class="secondary-btn" data-te="రీసెట్" data-en="Reset">రీసెట్</button>
+      </div>
+      <input type="hidden" id="editId">
+    </form>
+  </section>
+
+  <section class="card">
+    <h2 data-te="సారాంశం" data-en="Summary">సారాంశం</h2>
+    <div class="summary-grid">
+      <div class="stat"><span data-te="మొత్తం అమ్మకాలు" data-en="Total Sales">మొత్తం అమ్మకాలు</span><b id="statTotalSales">₹0</b></div>
+      <div class="stat"><span data-te="మొత్తం కమిషన్" data-en="Total Commission">మొత్తం కమిషన్</span><b id="statTotalCommission">₹0</b></div>
+      <div class="stat"><span data-te="మొత్తం బస్తాలు" data-en="Total Bags">మొత్తం బస్తాలు</span><b id="statTotalBags">0</b></div>
+      <div class="stat"><span data-te="ఎంట్రీలు" data-en="Entries">ఎంట్రీలు</span><b id="statCount">0</b></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="table-header">
+      <h2 data-te="అమ్మకాల జాబితా" data-en="Sales Records">అమ్మకాల జాబితా</h2>
+      <div class="table-controls">
+        <input type="text" id="searchBox" placeholder="రైతు / గ్రామం వెతకండి..." data-te-ph="రైతు / గ్రామం వెతకండి..." data-en-ph="Search farmer / village...">
+        <input type="date" id="filterDate">
+        <button id="clearFilter" class="secondary-btn" data-te="క్లియర్" data-en="Clear">క్లియర్</button>
+        <button id="exportCsv" class="secondary-btn" data-te="CSV డౌన్‌లోడ్" data-en="Export CSV">CSV డౌన్‌లోడ్</button>
+      </div>
+    </div>
+    <div id="recordsList" class="records-list"></div>
+    <p id="emptyMsg" class="empty-msg" data-te="ఇంకా ఎంట్రీలు లేవు" data-en="No entries yet">ఇంకా ఎంట్రీలు లేవు</p>
+  </section>
+</main>
+
+<footer>
+  <p data-te="డేటా ఈ బ్రౌజర్‌లో మాత్రమే సేవ్ అవుతుంది" data-en="Data is saved only in this browser">డేటా ఈ బ్రౌజర్‌లో మాత్రమే సేవ్ అవుతుంది</p>
+</footer>
+
+<div id="receiptModal" class="modal-overlay hidden">
+  <div class="modal-box">
+    <div id="receiptPaper" class="receipt-paper"></div>
+    <textarea id="receiptText" class="visually-hidden" readonly></textarea>
+    <div class="modal-actions">
+      <a id="whatsappLink" class="primary-btn" target="_blank" rel="noopener" data-te="WhatsApp లో పంపండి" data-en="Send via WhatsApp">WhatsApp లో పంపండి</a>
+      <button id="printReceipt" class="secondary-btn" data-te="ప్రింట్" data-en="Print">ప్రింట్</button>
+      <button id="copyReceipt" class="secondary-btn" data-te="కాపీ చేయండి" data-en="Copy Text">కాపీ చేయండి</button>
+      <button id="closeReceipt" class="secondary-btn" data-te="మూసివేయండి" data-en="Close">మూసివేయండి</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY = 'khammam_grain_sales_v1';
+const LANG_KEY = 'khammam_grain_lang';
+
+let sales = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+let lang = localStorage.getItem(LANG_KEY) || 'te';
+
+const $ = (id) => document.getElementById(id);
+
+const form = $('saleForm');
+const dateInput = $('date');
+const farmerName = $('farmerName');
+const farmerPhone = $('farmerPhone');
+const village = $('village');
+const grainType = $('grainType');
+const bagsInput = $('bags');
+const weightInput = $('weight');
+const rateInput = $('rate');
+const commissionPctInput = $('commissionPct');
+const hamaliRateInput = $('hamaliRateInput');
+const BAG_CHARGE_RATE = 40;
+const otherDeductionInput = $('otherDeduction');
+const editIdInput = $('editId');
+
+const prevEffRate = $('prevEffRate');
+const prevBagCharge = $('prevBagCharge');
+const prevTotal = $('prevTotal');
+const prevCommission = $('prevCommission');
+const prevHamali = $('prevHamali');
+const prevNet = $('prevNet');
+
+const recordsList = $('recordsList');
+const emptyMsg = $('emptyMsg');
+const searchBox = $('searchBox');
+const filterDate = $('filterDate');
+
+function fmt(n){
+  return '₹' + (n || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function computeTotals(bags, weightKg, rate, commissionPct, hamaliRate, otherDeduction){
+  const baseTotal = (weightKg || 0) / 100 * (rate || 0);
+  const bagCharge = (bags || 0) * BAG_CHARGE_RATE;
+  const total = baseTotal + bagCharge;
+  const commission = baseTotal * ((commissionPct || 0) / 100);
+  const hamali = (bags || 0) * (hamaliRate || 0);
+  const net = total - commission - hamali - (otherDeduction || 0);
+  return { baseTotal, bagCharge, total, commission, hamali, net };
+}
+
+function updatePreview(){
+  const { baseTotal, bagCharge, total, commission, hamali, net } = computeTotals(
+    parseFloat(bagsInput.value),
+    parseFloat(weightInput.value),
+    parseFloat(rateInput.value),
+    parseFloat(commissionPctInput.value),
+    parseFloat(hamaliRateInput.value),
+    parseFloat(otherDeductionInput.value)
+  );
+  prevEffRate.textContent = fmt(baseTotal);
+  prevBagCharge.textContent = fmt(bagCharge);
+  prevTotal.textContent = fmt(total);
+  prevCommission.textContent = fmt(commission);
+  prevHamali.textContent = fmt(hamali);
+  prevNet.textContent = fmt(net);
+}
+
+[bagsInput, weightInput, rateInput, commissionPctInput, hamaliRateInput, otherDeductionInput].forEach(el =>
+  el.addEventListener('input', updatePreview)
+);
+
+function saveAll(){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(sales));
+}
+
+function resetForm(){
+  form.reset();
+  editIdInput.value = '';
+  dateInput.value = new Date().toISOString().slice(0,10);
+  commissionPctInput.value = 2;
+  hamaliRateInput.value = 0;
+  otherDeductionInput.value = 0;
+  updatePreview();
+  form.querySelector('.primary-btn').textContent = lang === 'te' ? 'సేవ్ చేయండి' : 'Save Entry';
+}
+
+form.addEventListener('submit', (e) => {
+  e.preventDefault();
+  const bags = parseFloat(bagsInput.value) || 0;
+  const weightKg = parseFloat(weightInput.value) || 0;
+  const rate = parseFloat(rateInput.value) || 0;
+  const commissionPct = parseFloat(commissionPctInput.value) || 0;
+  const hamaliRate = parseFloat(hamaliRateInput.value) || 0;
+  const otherDeduction = parseFloat(otherDeductionInput.value) || 0;
+  const { baseTotal, bagCharge, total, commission, hamali, net } = computeTotals(bags, weightKg, rate, commissionPct, hamaliRate, otherDeduction);
+
+  const entry = {
+    id: editIdInput.value || crypto.randomUUID(),
+    date: dateInput.value,
+    farmerName: farmerName.value.trim(),
+    farmerPhone: farmerPhone.value.trim(),
+    village: village.value.trim(),
+    grainType: grainType.value,
+    bags,
+    weightKg, rate, baseTotal, bagCharge, commissionPct, hamaliRate, hamali, otherDeduction,
+    total, commission, net
+  };
+
+  if (editIdInput.value){
+    const idx = sales.findIndex(s => s.id === editIdInput.value);
+    if (idx !== -1) sales[idx] = entry;
+  } else {
+    sales.push(entry);
+  }
+
+  saveAll();
+  resetForm();
+  render();
+});
+
+$('resetForm').addEventListener('click', resetForm);
+
+function editEntry(id){
+  const s = sales.find(x => x.id === id);
+  if (!s) return;
+  dateInput.value = s.date;
+  farmerName.value = s.farmerName;
+  farmerPhone.value = s.farmerPhone;
+  village.value = s.village || '';
+  grainType.value = s.grainType;
+  bagsInput.value = s.bags;
+  weightInput.value = s.weightKg;
+  rateInput.value = s.rate;
+  commissionPctInput.value = s.commissionPct;
+  hamaliRateInput.value = s.hamaliRate != null ? s.hamaliRate : 0;
+  otherDeductionInput.value = s.otherDeduction;
+  editIdInput.value = s.id;
+  updatePreview();
+  form.querySelector('.primary-btn').textContent = lang === 'te' ? 'నవీకరించండి' : 'Update Entry';
+  form.scrollIntoView({ behavior: 'smooth' });
+}
+
+function deleteEntry(id){
+  const confirmMsg = lang === 'te' ? 'ఈ ఎంట్రీని తొలగించాలా?' : 'Delete this entry?';
+  if (!confirm(confirmMsg)) return;
+  sales = sales.filter(s => s.id !== id);
+  saveAll();
+  render();
+}
+
+function getFiltered(){
+  const q = searchBox.value.trim().toLowerCase();
+  const d = filterDate.value;
+  return sales.filter(s => {
+    const matchesQ = !q || s.farmerName.toLowerCase().includes(q) || (s.village || '').toLowerCase().includes(q);
+    const matchesD = !d || s.date === d;
+    return matchesQ && matchesD;
+  }).sort((a,b) => b.date.localeCompare(a.date));
+}
+
+function render(){
+  const filtered = getFiltered();
+  recordsList.innerHTML = '';
+  emptyMsg.style.display = filtered.length ? 'none' : 'block';
+
+  const shareLabel = lang === 'te' ? 'రసీదు షేర్' : 'Share';
+  const editLabel = lang === 'te' ? 'ఎడిట్' : 'Edit';
+  const deleteLabel = lang === 'te' ? 'తొలగించు' : 'Delete';
+  const bagsLabel = lang === 'te' ? 'బస్తాలు' : 'Bags';
+  const weightLabel = lang === 'te' ? 'బరువు' : 'Weight';
+  const rateLabel = lang === 'te' ? 'రేటు' : 'Rate';
+  const totalLabel = lang === 'te' ? 'మొత్తం' : 'Total';
+  const commLabel = lang === 'te' ? 'కమిషన్' : 'Commission';
+  const hamaliLabel = lang === 'te' ? 'హమాలీ' : 'Hamali';
+  const baseValLabel = lang === 'te' ? 'విలువ (బరువు × రేటు)' : 'Value (Weight × Rate)';
+  const bagChargeLabel = lang === 'te' ? 'బస్తా ఖర్చు' : 'Bag Charge';
+  const netLabel = lang === 'te' ? 'చెల్లించవలసినది' : 'Net Payable';
+
+  filtered.forEach(s => {
+    const card = document.createElement('div');
+    card.className = 'record-card';
+    const baseTotal = s.baseTotal != null ? s.baseTotal : ((s.weightKg || 0)/100 * (s.rate || 0));
+    const bagCharge = s.bagCharge != null ? s.bagCharge : (s.bags || 0) * 40;
+    card.innerHTML = `
+      <div class="rc-top"><span>${escapeHtml(s.farmerName)}</span><span class="rc-date">${s.date}</span></div>
+      <div class="rc-sub">${escapeHtml(s.village || '')}${s.village ? ' · ' : ''}${escapeHtml(s.grainType)}</div>
+      <div class="rc-row"><span>${bagsLabel} / ${weightLabel}</span><span>${s.bags} / ${s.weightKg} kg</span></div>
+      <div class="rc-row"><span>${rateLabel} (₹/qtl)</span><span>${fmt(s.rate)}</span></div>
+      <div class="rc-row"><span>${baseValLabel}</span><span>${fmt(baseTotal)}</span></div>
+      <div class="rc-row"><span>+ ${bagChargeLabel}</span><span>${fmt(bagCharge)}</span></div>
+      <div class="rc-row"><span>${totalLabel}</span><span>${fmt(s.total)}</span></div>
+      <div class="rc-row"><span>${commLabel}</span><span>${fmt(s.commission)}</span></div>
+      <div class="rc-row"><span>${hamaliLabel}</span><span>${fmt(s.hamali || 0)}</span></div>
+      <div class="rc-net"><span>${netLabel}</span><b>${fmt(s.net)}</b></div>
+      <div class="rc-actions">
+        <button class="share-btn" data-id="${s.id}">📤 ${shareLabel}</button>
+        <button class="edit-btn" data-id="${s.id}">✎ ${editLabel}</button>
+        <button class="delete-btn" data-id="${s.id}">🗑 ${deleteLabel}</button>
+      </div>
+    `;
+    recordsList.appendChild(card);
+  });
+
+  recordsList.querySelectorAll('.edit-btn').forEach(btn =>
+    btn.addEventListener('click', () => editEntry(btn.dataset.id))
+  );
+  recordsList.querySelectorAll('.delete-btn').forEach(btn =>
+    btn.addEventListener('click', () => deleteEntry(btn.dataset.id))
+  );
+  recordsList.querySelectorAll('.share-btn').forEach(btn =>
+    btn.addEventListener('click', () => shareReceipt(btn.dataset.id))
+  );
+
+  const totalSales = filtered.reduce((a,s) => a + s.total, 0);
+  const totalCommission = filtered.reduce((a,s) => a + s.commission, 0);
+  const totalBags = filtered.reduce((a,s) => a + s.bags, 0);
+
+  $('statTotalSales').textContent = fmt(totalSales);
+  $('statTotalCommission').textContent = fmt(totalCommission);
+  $('statTotalBags').textContent = totalBags;
+  $('statCount').textContent = filtered.length;
+}
+
+function buildReceiptText(s){
+  const lines = [
+    'ఖమ్మం గ్రెయిన్ మార్కెట్ - రసీదు / Receipt',
+    `తేదీ / Date: ${s.date}`,
+    `రైతు / Farmer: ${s.farmerName}`,
+  ];
+  if (s.village) lines.push(`గ్రామం / Village: ${s.village}`);
+  const baseTotal = s.baseTotal != null ? s.baseTotal : ((s.weightKg || 0)/100 * (s.rate || 0));
+  const bagCharge = s.bagCharge != null ? s.bagCharge : (s.bags || 0) * 40;
+  lines.push(
+    `ధాన్యం / Grain: ${s.grainType}`,
+    `బస్తాలు / Bags: ${s.bags}   బరువు / Weight: ${s.weightKg} kg`,
+    `రేటు / Rate: ${fmt(s.rate)} / క్వి.`,
+    `విలువ (బరువు × రేటు) / Value: ${fmt(baseTotal)}`,
+    `+ బస్తా ఖర్చు / Bag Charge: ${fmt(bagCharge)}`,
+    `మొత్తం విలువ / Total Value: ${fmt(s.total)}`,
+    `కమిషన్ / Commission (${s.commissionPct}%): ${fmt(s.commission)}`
+  );
+  if (s.hamali) lines.push(`హమాలీ / Hamali (${s.bags} × ${fmt(s.hamaliRate || 0)}): ${fmt(s.hamali)}`);
+  if (s.otherDeduction) lines.push(`ఇతర ఖర్చులు / Other Deduction: ${fmt(s.otherDeduction)}`);
+  lines.push('-----------------------------');
+  lines.push(`రైతుకు చెల్లించవలసినది / Net Payable: ${fmt(s.net)}`);
+  return lines.join('\n');
+}
+
+function buildReceiptHTML(s){
+  const baseTotal = s.baseTotal != null ? s.baseTotal : ((s.weightKg || 0)/100 * (s.rate || 0));
+  const bagCharge = s.bagCharge != null ? s.bagCharge : (s.bags || 0) * 40;
+  const hamaliRow = s.hamali
+    ? `<tr><td>హమాలీ / Hamali</td><td>-${fmt(s.hamali)}</td></tr>`
+    : '';
+  const otherRow = s.otherDeduction
+    ? `<tr><td>ఇతర ఖర్చులు / Other Deduction</td><td>-${fmt(s.otherDeduction)}</td></tr>`
+    : '';
+  return `
+    <div class="rp-header">
+      <h3>Farmer Receipt</h3>
+      <div class="rp-meta"><span>${s.date}</span></div>
+    </div>
+    <div class="rp-body">
+      <div class="rp-grid">
+        <div class="rp-field"><span>రైతు / Farmer</span><b>${escapeHtml(s.farmerName)}</b></div>
+        <div class="rp-field"><span>గ్రామం / Village</span><b>${escapeHtml(s.village || '-')}</b></div>
+        <div class="rp-field"><span>ధాన్యం / Grain</span><b>${escapeHtml(s.grainType)}</b></div>
+        <div class="rp-field"><span>బస్తాలు / Weight</span><b>${s.bags} bags · ${s.weightKg} kg</b></div>
+      </div>
+      <table class="rp-table">
+        <tr><td>రేటు / Rate (₹/qtl)</td><td>${fmt(s.rate)}</td></tr>
+        <tr class="rp-sub"><td>విలువ (బరువు × రేటు) / Value</td><td>${fmt(baseTotal)}</td></tr>
+        <tr><td>+ బస్తా ఖర్చు / Bag Charge</td><td>${fmt(bagCharge)}</td></tr>
+        <tr><td><b>మొత్తం / Total</b></td><td><b>${fmt(s.total)}</b></td></tr>
+        <tr><td>కమిషన్ / Commission (${s.commissionPct}%)</td><td>-${fmt(s.commission)}</td></tr>
+        ${hamaliRow}
+        ${otherRow}
+      </table>
+      <div class="rp-net"><span>Net Payable</span><b>${fmt(s.net)}</b></div>
+    </div>
+    <div class="rp-footer">
+      <div>Thank you! ధన్యవాదాలు</div>
+      <div class="rp-sign"><div class="rp-sign-line">Authorized Signature</div></div>
+    </div>
+  `;
+}
+
+const receiptModal = $('receiptModal');
+const receiptText = $('receiptText');
+const receiptPaper = $('receiptPaper');
+const whatsappLink = $('whatsappLink');
+
+function shareReceipt(id){
+  const s = sales.find(x => x.id === id);
+  if (!s) return;
+  const text = buildReceiptText(s);
+
+  receiptPaper.innerHTML = buildReceiptHTML(s);
+  receiptText.value = text;
+  let phone = (s.farmerPhone || '').replace(/\D/g, '');
+  if (phone.length === 10) phone = '91' + phone;
+  whatsappLink.href = `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
+  receiptModal.classList.remove('hidden');
+}
+
+$('closeReceipt').addEventListener('click', () => receiptModal.classList.add('hidden'));
+receiptModal.addEventListener('click', (e) => {
+  if (e.target === receiptModal) receiptModal.classList.add('hidden');
+});
+$('printReceipt').addEventListener('click', () => window.print());
+$('copyReceipt').addEventListener('click', async () => {
+  const btn = $('copyReceipt');
+  receiptText.select();
+  try {
+    await navigator.clipboard.writeText(receiptText.value);
+  } catch (err){
+    document.execCommand('copy');
+  }
+  const original = btn.textContent;
+  btn.textContent = lang === 'te' ? 'కాపీ అయ్యింది!' : 'Copied!';
+  setTimeout(() => { btn.textContent = original; }, 1500);
+});
+
+function escapeHtml(str){
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+searchBox.addEventListener('input', render);
+filterDate.addEventListener('input', render);
+$('clearFilter').addEventListener('click', () => {
+  searchBox.value = '';
+  filterDate.value = '';
+  render();
+});
+
+$('exportCsv').addEventListener('click', () => {
+  const filtered = getFiltered();
+  const headers = ['Date','Farmer','Farmer Phone','Village','Grain Type','Bags','Weight(Kg)','Rate(per Qtl)','Value(Wt×Rate)','Bag Charge','Total','Commission %','Commission','Hamali Rate','Hamali','Other Deduction','Net Payable'];
+  const rows = filtered.map(s => {
+    const baseTotal = s.baseTotal != null ? s.baseTotal : ((s.weightKg||0)/100 * (s.rate || 0));
+    const bagCharge = s.bagCharge != null ? s.bagCharge : (s.bags || 0) * 40;
+    return [
+      s.date, s.farmerName, s.farmerPhone, s.village || '', s.grainType, s.bags, s.weightKg,
+      s.rate, baseTotal.toFixed(2), bagCharge.toFixed(2), s.total.toFixed(2), s.commissionPct, s.commission.toFixed(2),
+      s.hamaliRate || 0, (s.hamali || 0).toFixed(2), s.otherDeduction, s.net.toFixed(2)
+    ];
+  });
+  const csv = [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `khammam_grain_sales_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+function applyLang(){
+  document.documentElement.lang = lang === 'te' ? 'te' : 'en';
+  $('langToggle').textContent = lang === 'te' ? 'EN' : 'తెలుగు';
+  document.querySelectorAll('[data-te]').forEach(el => {
+    el.textContent = lang === 'te' ? el.dataset.te : el.dataset.en;
+  });
+  document.querySelectorAll('[data-te-ph]').forEach(el => {
+    el.placeholder = lang === 'te' ? el.dataset.tePh : el.dataset.enPh;
+  });
+  const isEditing = !!editIdInput.value;
+  form.querySelector('.primary-btn').textContent = isEditing
+    ? (lang === 'te' ? 'నవీకరించండి' : 'Update Entry')
+    : (lang === 'te' ? 'సేవ్ చేయండి' : 'Save Entry');
+}
+
+$('langToggle').addEventListener('click', () => {
+  lang = lang === 'te' ? 'en' : 'te';
+  localStorage.setItem(LANG_KEY, lang);
+  applyLang();
+  render();
+});
+
+// init
+dateInput.value = new Date().toISOString().slice(0,10);
+applyLang();
+updatePreview();
+render();
+</script>
+</body>
+</html>
