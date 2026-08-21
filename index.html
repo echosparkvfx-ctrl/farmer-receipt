@@ -32,6 +32,7 @@ body{
   align-items:center;
 }
 .topbar h1{margin:0;font-size:1.3rem;}
+.topbar-actions{display:flex;gap:8px;align-items:center;}
 .lang-btn{
   background:#fff2;
   border:1px solid #fff5;
@@ -40,6 +41,35 @@ body{
   border-radius:8px;
   cursor:pointer;
   font-weight:600;
+}
+.hidden{display:none !important;}
+.login-screen{
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:linear-gradient(135deg,var(--primary),var(--primary-dark));
+  padding:20px;
+}
+.login-box{
+  background:#fff;
+  border-radius:14px;
+  padding:32px 28px;
+  text-align:center;
+  max-width:340px;
+  width:100%;
+  box-shadow:0 10px 30px rgba(0,0,0,.2);
+}
+.login-box h1{margin:0 0 8px;color:var(--primary-dark);font-size:1.4rem;}
+.login-box p{color:var(--muted);margin:0 0 20px;font-size:.92rem;}
+.login-box .primary-btn{width:100%;padding:12px;font-size:.95rem;}
+.access-denied{
+  margin-top:16px !important;
+  color:var(--danger) !important;
+  font-weight:600;
+  background:#fbe9e7;
+  padding:10px;
+  border-radius:8px;
 }
 main{
   max-width:1100px;
@@ -345,9 +375,22 @@ footer{
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
+<div id="loginScreen" class="login-screen">
+  <div class="login-box">
+    <h1>Farmer Receipt</h1>
+    <p id="loginMsg" data-te="కొనసాగించడానికి సైన్ ఇన్ చేయండి" data-en="Sign in to continue">కొనసాగించడానికి సైన్ ఇన్ చేయండి</p>
+    <button id="googleSignInBtn" class="primary-btn">Sign in with Google</button>
+    <p id="accessDeniedMsg" class="access-denied hidden" data-te="మీకు ఈ యాప్‌ను వాడే అనుమతి లేదు" data-en="You don't have permission to use this app">మీకు ఈ యాప్‌ను వాడే అనుమతి లేదు</p>
+  </div>
+</div>
+
+<div id="appRoot" class="hidden">
 <header class="topbar">
   <h1 id="appTitle">Farmer Receipt</h1>
-  <button id="langToggle" class="lang-btn">EN</button>
+  <div class="topbar-actions">
+    <button id="signOutBtn" class="lang-btn" title="Sign out">⎋</button>
+    <button id="langToggle" class="lang-btn">EN</button>
+  </div>
 </header>
 
 <main>
@@ -482,6 +525,7 @@ footer{
 <footer>
   <p data-te="డేటా ఈ బ్రౌజర్‌లో మాత్రమే సేవ్ అవుతుంది" data-en="Data is saved only in this browser">డేటా ఈ బ్రౌజర్‌లో మాత్రమే సేవ్ అవుతుంది</p>
 </footer>
+</div>
 
 <div id="receiptModal" class="modal-overlay hidden">
   <div class="modal-box">
@@ -499,6 +543,7 @@ footer{
 
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
 <script>
 const firebaseConfig = {
   apiKey: "AIzaSyA5BhxW09PZ4VLWoMujeWhWdGK2dn9NxGU",
@@ -510,6 +555,7 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
+const auth = firebase.auth();
 const salesCollection = db.collection('khammam_sales');
 
 const STORAGE_KEY = 'khammam_grain_sales_v1';
@@ -519,17 +565,56 @@ let sales = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
 let lang = localStorage.getItem(LANG_KEY) || 'te';
 let firestoreReady = false;
 
-salesCollection.onSnapshot(snapshot => {
-  sales = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-  firestoreReady = true;
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(sales));
-  render();
-}, err => {
-  console.error('Firestore sync error:', err);
-  alert(lang === 'te'
-    ? 'డేటా సింక్ కావడంలో సమస్య. ఇంటర్నెట్ చెక్ చేయండి.'
-    : 'Could not sync data. Please check your internet connection.');
+const ALLOWED_EMAILS = ['radhakrishnanalajala@gmail.com', 'anyupdateinternational@gmail.com'];
+
+const loginScreen = document.getElementById('loginScreen');
+const appRoot = document.getElementById('appRoot');
+const accessDeniedMsg = document.getElementById('accessDeniedMsg');
+const loginMsg = document.getElementById('loginMsg');
+let unsubscribeSales = null;
+
+document.getElementById('googleSignInBtn').addEventListener('click', () => {
+  accessDeniedMsg.classList.add('hidden');
+  const provider = new firebase.auth.GoogleAuthProvider();
+  auth.signInWithPopup(provider).catch(err => {
+    console.error(err);
+    loginMsg.textContent = (lang === 'te' ? 'సైన్ ఇన్ విఫలమైంది. మళ్ళీ ప్రయత్నించండి.' : 'Sign-in failed. Please try again.');
+  });
 });
+
+document.getElementById('signOutBtn').addEventListener('click', () => {
+  auth.signOut();
+});
+
+auth.onAuthStateChanged(user => {
+  if (unsubscribeSales) { unsubscribeSales(); unsubscribeSales = null; }
+  if (user && ALLOWED_EMAILS.includes(user.email)) {
+    loginScreen.classList.add('hidden');
+    appRoot.classList.remove('hidden');
+    startSync();
+  } else {
+    appRoot.classList.add('hidden');
+    loginScreen.classList.remove('hidden');
+    if (user) {
+      accessDeniedMsg.classList.remove('hidden');
+      auth.signOut();
+    }
+  }
+});
+
+function startSync(){
+  unsubscribeSales = salesCollection.onSnapshot(snapshot => {
+    sales = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+    firestoreReady = true;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(sales));
+    render();
+  }, err => {
+    console.error('Firestore sync error:', err);
+    alert(lang === 'te'
+      ? 'డేటా సింక్ కావడంలో సమస్య. ఇంటర్నెట్ చెక్ చేయండి.'
+      : 'Could not sync data. Please check your internet connection.');
+  });
+}
 
 const $ = (id) => document.getElementById(id);
 
