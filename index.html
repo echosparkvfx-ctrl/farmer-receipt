@@ -639,7 +639,7 @@ function render(){
     card.innerHTML = `
       <div class="rc-top"><span>${escapeHtml(s.farmerName)}</span><span class="rc-date">${s.date}</span></div>
       <div class="rc-sub">${escapeHtml(s.village || '')}${s.village ? ' · ' : ''}${escapeHtml(s.grainType)}</div>
-      <div class="rc-row"><span>${bagsLabel} / ${weightLabel}</span><span>${s.bags} / ${s.weightKg} kg</span></div>
+      <div class="rc-row"><span>${bagsLabel} / ${weightLabel}</span><span>${s.bags} / ${(s.weightKg || 0).toFixed(2)} kg</span></div>
       <div class="rc-row"><span>${rateLabel} (₹/qtl)</span><span>${fmt(s.rate)}</span></div>
       <div class="rc-row"><span>${baseValLabel}</span><span>${fmt(baseTotal)}</span></div>
       <div class="rc-row"><span>+ ${bagChargeLabel}</span><span>${fmt(bagCharge)}</span></div>
@@ -687,7 +687,7 @@ function buildReceiptText(s){
   const bagCharge = s.bagCharge != null ? s.bagCharge : (s.bags || 0) * 40;
   lines.push(
     `ధాన్యం / Grain: ${s.grainType}`,
-    `బస్తాలు / Bags: ${s.bags}   బరువు / Weight: ${s.weightKg} kg`,
+    `బస్తాలు / Bags: ${s.bags}   బరువు / Weight: ${(s.weightKg || 0).toFixed(2)} kg`,
     `రేటు / Rate: ${fmt(s.rate)} / క్వి.`,
     `విలువ (బరువు × రేటు) / Value: ${fmt(baseTotal)}`,
     `+ బస్తా ఖర్చు / Bag Charge: ${fmt(bagCharge)}`,
@@ -724,7 +724,7 @@ function buildReceiptHTML(s){
     <div class="r-line">ధాన్యం / Grain: ${escapeHtml(s.grainType)}</div>
     <div class="r-dash"></div>
     <div class="r-row"><span>బస్తాలు / Bags</span><span>${s.bags}</span></div>
-    <div class="r-row"><span>బరువు / Weight</span><span>${s.weightKg} kg</span></div>
+    <div class="r-row"><span>బరువు / Weight</span><span>${(s.weightKg || 0).toFixed(2)} kg</span></div>
     <div class="r-row"><span>రేటు / Rate (₹/qtl)</span><span>${fmt(s.rate)}</span></div>
     <div class="r-row"><span>విలువ / Value</span><span>${fmt(baseTotal)}</span></div>
     <div class="r-row"><span>+ బస్తా ఖర్చు / Bag Charge</span><span>${fmt(bagCharge)}</span></div>
