@@ -275,6 +275,24 @@ footer{
 .modal-actions{display:flex;flex-direction:column;gap:8px;}
 .modal-actions .primary-btn{text-align:center;text-decoration:none;}
 
+.w-block{margin:6px 0;}
+.w-row{
+  display:grid;
+  grid-template-columns:14px 90px 1fr;
+  gap:6px;
+  font-size:.82rem;
+  padding:1px 0;
+  align-items:baseline;
+}
+.w-op{text-align:left;font-weight:700;}
+.w-amt{text-align:right;font-variant-numeric:tabular-nums;}
+.w-lbl{color:#555;font-size:.72rem;padding-left:4px;}
+.w-rule{
+  border-top:1px solid #333;
+  width:104px;
+  margin:2px 0 2px 14px;
+}
+
 @media print{
   @page{ margin: 8mm; }
   body > header, body > main, body > footer{display:none !important;}
@@ -707,12 +725,24 @@ function buildReceiptHTML(s){
   const villageRow = s.village
     ? `<div class="r-line">గ్రామం / Village: ${escapeHtml(s.village)}</div>`
     : '';
-  const hamaliRow = s.hamali
-    ? `<div class="r-row"><span>HAMALI</span><span>-${fmt(s.hamali)}</span></div>`
+
+  const afterBagCharge = baseTotal + bagCharge;
+  const afterCommission = afterBagCharge - s.commission;
+  const afterHamali = afterCommission - (s.hamali || 0);
+
+  const hamaliStep = s.hamali
+    ? `
+    <div class="w-row"><span class="w-op">-</span><span class="w-amt">${fmt(s.hamali)}</span><span class="w-lbl">Hamali (${s.bags} × ${fmt(s.hamaliRate||0)})</span></div>
+    <div class="w-rule"></div>
+    <div class="w-row"><span class="w-op"></span><span class="w-amt">${fmt(afterHamali)}</span><span class="w-lbl"></span></div>`
     : '';
-  const otherRow = s.otherDeduction
-    ? `<div class="r-row"><span>ఇతర ఖర్చులు / Other Deduction</span><span>-${fmt(s.otherDeduction)}</span></div>`
+  const otherStep = s.otherDeduction
+    ? `
+    <div class="w-row"><span class="w-op">-</span><span class="w-amt">${fmt(s.otherDeduction)}</span><span class="w-lbl">ఇతర ఖర్చులు / Other</span></div>
+    <div class="w-rule"></div>
+    <div class="w-row"><span class="w-op"></span><span class="w-amt">${fmt(afterHamali - s.otherDeduction)}</span><span class="w-lbl"></span></div>`
     : '';
+
   return `
     <div class="r-center r-stars">********************************</div>
     <div class="r-center r-title">Farmer Receipt</div>
@@ -726,13 +756,20 @@ function buildReceiptHTML(s){
     <div class="r-row"><span>బస్తాలు / Bags</span><span>${s.bags}</span></div>
     <div class="r-row"><span>బరువు / Weight</span><span>${(s.weightKg || 0).toFixed(2)} qtl</span></div>
     <div class="r-row"><span>రేటు / Rate (₹/qtl)</span><span>${fmt(s.rate)}</span></div>
-    <div class="r-row"><span>విలువ / Value</span><span>${fmt(baseTotal)}</span></div>
-    <div class="r-row"><span>+ బస్తా ఖర్చు / Bag Charge</span><span>${fmt(bagCharge)}</span></div>
     <div class="r-dash"></div>
-    <div class="r-row"><span>TOTAL</span><span>${fmt(s.total)}</span></div>
-    <div class="r-row"><span>COMMISSION (${s.commissionPct}%)</span><span>-${fmt(s.commission)}</span></div>
-    ${hamaliRow}
-    ${otherRow}
+
+    <div class="w-block">
+      <div class="w-row"><span class="w-op"></span><span class="w-amt">${fmt(baseTotal)}</span><span class="w-lbl">Value (Wt × Rate)</span></div>
+      <div class="w-row"><span class="w-op">+</span><span class="w-amt">${fmt(bagCharge)}</span><span class="w-lbl">Bag Charge</span></div>
+      <div class="w-rule"></div>
+      <div class="w-row"><span class="w-op"></span><span class="w-amt">${fmt(afterBagCharge)}</span><span class="w-lbl">Total</span></div>
+      <div class="w-row"><span class="w-op">-</span><span class="w-amt">${fmt(s.commission)}</span><span class="w-lbl">Commission (${s.commissionPct}%)</span></div>
+      <div class="w-rule"></div>
+      <div class="w-row"><span class="w-op"></span><span class="w-amt">${fmt(afterCommission)}</span><span class="w-lbl"></span></div>
+      ${hamaliStep}
+      ${otherStep}
+    </div>
+
     <div class="r-dash"></div>
     <div class="r-row bold"><span>NET PAYABLE</span><span>${fmt(s.net)}</span></div>
     <div class="r-dash"></div>
