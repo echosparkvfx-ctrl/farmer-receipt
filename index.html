@@ -468,6 +468,15 @@ const BAG_CHARGE_RATE = 40;
 const otherDeductionInput = $('otherDeduction');
 const editIdInput = $('editId');
 
+function formatTwoDecimalsOnBlur(el){
+  el.addEventListener('blur', () => {
+    if (el.value === '') return;
+    const n = parseFloat(el.value);
+    if (!isNaN(n)) el.value = n.toFixed(2);
+  });
+}
+[weightInput, hamaliRateInput].forEach(formatTwoDecimalsOnBlur);
+
 const prevEffRate = $('prevEffRate');
 const prevBagCharge = $('prevBagCharge');
 const prevTotal = $('prevTotal');
@@ -575,10 +584,10 @@ function editEntry(id){
   village.value = s.village || '';
   grainType.value = s.grainType;
   bagsInput.value = s.bags;
-  weightInput.value = s.weightKg;
+  weightInput.value = (s.weightKg || 0).toFixed(2);
   rateInput.value = s.rate;
   commissionPctInput.value = s.commissionPct;
-  hamaliRateInput.value = s.hamaliRate != null ? s.hamaliRate : 0;
+  hamaliRateInput.value = (s.hamaliRate != null ? s.hamaliRate : 0).toFixed(2);
   otherDeductionInput.value = s.otherDeduction;
   editIdInput.value = s.id;
   updatePreview();
