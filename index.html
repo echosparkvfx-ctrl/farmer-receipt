@@ -223,64 +223,54 @@ footer{
 .visually-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);}
 
 .receipt-paper{
-  background:#fff;
-  color:#2b2418;
-  font-family:'Segoe UI',sans-serif;
-  padding:0;
+  background:#fefefb;
+  color:#1a1a1a;
+  font-family:'Courier New',monospace;
+  padding:20px 16px 24px;
   margin-top:10px;
-  border-radius:10px;
-  overflow:hidden;
-  box-shadow:0 4px 14px rgba(0,0,0,.18);
-  border:1px solid #e1d9c8;
+  box-shadow:0 4px 14px rgba(0,0,0,.25);
+  position:relative;
 }
-.rp-header{
-  background:linear-gradient(120deg,#8a5a2c,#6e4520);
-  color:#fff;
-  padding:16px 18px;
+.receipt-paper::before,
+.receipt-paper::after{
+  content:"";
+  position:absolute;
+  left:0;
+  right:0;
+  height:10px;
+  background-image:
+    linear-gradient(135deg, #d8d2c4 50%, transparent 50%),
+    linear-gradient(225deg, #d8d2c4 50%, transparent 50%);
+  background-size:14px 14px;
+  background-repeat:repeat-x;
+  background-position:left top;
 }
-.rp-header h3{margin:0;font-size:1.15rem;letter-spacing:.3px;}
-.rp-header .rp-meta{
-  display:flex;
-  justify-content:space-between;
-  font-size:.75rem;
-  opacity:.9;
-  margin-top:6px;
+.receipt-paper::before{top:-10px;}
+.receipt-paper::after{bottom:-10px;transform:rotate(180deg);}
+
+.r-center{text-align:center;}
+.r-title{font-size:1.05rem;font-weight:700;letter-spacing:.5px;margin:2px 0;}
+.r-stars{letter-spacing:1px;font-size:.75rem;margin:6px 0;color:#333;}
+.r-dash{border-top:1px dashed #555;margin:8px 0;}
+.r-line{font-size:.8rem;line-height:1.5;word-break:break-word;}
+.r-row{display:flex;justify-content:space-between;gap:10px;font-size:.82rem;padding:2px 0;}
+.r-row.bold{font-weight:700;font-size:.92rem;}
+.r-thanks{font-size:.78rem;letter-spacing:1px;margin:10px 0 4px;text-align:center;}
+.barcode{
+  height:42px;
+  margin-top:8px;
+  background:repeating-linear-gradient(
+    90deg,
+    #000 0px, #000 2px,
+    transparent 2px, transparent 4px,
+    #000 4px, #000 5px,
+    transparent 5px, transparent 9px,
+    #000 9px, #000 11px,
+    transparent 11px, transparent 13px,
+    #000 13px, #000 14px,
+    transparent 14px, transparent 19px
+  );
 }
-.rp-body{padding:16px 18px;}
-.rp-grid{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:10px 16px;
-  margin-bottom:14px;
-}
-.rp-field span{display:block;font-size:.7rem;color:#7a6f5d;text-transform:uppercase;letter-spacing:.4px;margin-bottom:2px;}
-.rp-field b{font-size:.88rem;color:#2b2418;font-weight:600;}
-.rp-table{width:100%;border-collapse:collapse;font-size:.85rem;margin-bottom:4px;}
-.rp-table td{padding:7px 0;border-bottom:1px solid #f0ece0;}
-.rp-table td:last-child{text-align:right;font-weight:600;}
-.rp-table tr.rp-sub td{color:#7a6f5d;font-size:.8rem;}
-.rp-net{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  background:#faf6ee;
-  border-radius:8px;
-  padding:12px 14px;
-  margin-top:10px;
-}
-.rp-net span{font-weight:700;color:#6e4520;}
-.rp-net b{color:#2f7d4f;font-size:1.25rem;}
-.rp-footer{
-  padding:12px 18px 16px;
-  border-top:1px dashed #e1d9c8;
-  display:flex;
-  justify-content:space-between;
-  align-items:flex-end;
-  font-size:.72rem;
-  color:#7a6f5d;
-}
-.rp-sign{text-align:right;}
-.rp-sign .rp-sign-line{border-top:1px solid #999;margin-top:22px;padding-top:4px;width:120px;}
 
 .modal-actions{display:flex;flex-direction:column;gap:8px;}
 .modal-actions .primary-btn{text-align:center;text-decoration:none;}
@@ -705,39 +695,40 @@ function buildReceiptText(s){
 function buildReceiptHTML(s){
   const baseTotal = s.baseTotal != null ? s.baseTotal : ((s.weightKg || 0)/100 * (s.rate || 0));
   const bagCharge = s.bagCharge != null ? s.bagCharge : (s.bags || 0) * 40;
+  const villageRow = s.village
+    ? `<div class="r-line">గ్రామం / Village: ${escapeHtml(s.village)}</div>`
+    : '';
   const hamaliRow = s.hamali
-    ? `<tr><td>హమాలీ / Hamali</td><td>-${fmt(s.hamali)}</td></tr>`
+    ? `<div class="r-row"><span>HAMALI</span><span>-${fmt(s.hamali)}</span></div>`
     : '';
   const otherRow = s.otherDeduction
-    ? `<tr><td>ఇతర ఖర్చులు / Other Deduction</td><td>-${fmt(s.otherDeduction)}</td></tr>`
+    ? `<div class="r-row"><span>ఇతర ఖర్చులు / Other Deduction</span><span>-${fmt(s.otherDeduction)}</span></div>`
     : '';
   return `
-    <div class="rp-header">
-      <h3>Farmer Receipt</h3>
-      <div class="rp-meta"><span>${s.date}</span></div>
-    </div>
-    <div class="rp-body">
-      <div class="rp-grid">
-        <div class="rp-field"><span>రైతు / Farmer</span><b>${escapeHtml(s.farmerName)}</b></div>
-        <div class="rp-field"><span>గ్రామం / Village</span><b>${escapeHtml(s.village || '-')}</b></div>
-        <div class="rp-field"><span>ధాన్యం / Grain</span><b>${escapeHtml(s.grainType)}</b></div>
-        <div class="rp-field"><span>బస్తాలు / Weight</span><b>${s.bags} bags · ${s.weightKg} kg</b></div>
-      </div>
-      <table class="rp-table">
-        <tr><td>రేటు / Rate (₹/qtl)</td><td>${fmt(s.rate)}</td></tr>
-        <tr class="rp-sub"><td>విలువ (బరువు × రేటు) / Value</td><td>${fmt(baseTotal)}</td></tr>
-        <tr><td>+ బస్తా ఖర్చు / Bag Charge</td><td>${fmt(bagCharge)}</td></tr>
-        <tr><td><b>మొత్తం / Total</b></td><td><b>${fmt(s.total)}</b></td></tr>
-        <tr><td>కమిషన్ / Commission (${s.commissionPct}%)</td><td>-${fmt(s.commission)}</td></tr>
-        ${hamaliRow}
-        ${otherRow}
-      </table>
-      <div class="rp-net"><span>Net Payable</span><b>${fmt(s.net)}</b></div>
-    </div>
-    <div class="rp-footer">
-      <div>Thank you! ధన్యవాదాలు</div>
-      <div class="rp-sign"><div class="rp-sign-line">Authorized Signature</div></div>
-    </div>
+    <div class="r-center r-stars">********************************</div>
+    <div class="r-center r-title">Farmer Receipt</div>
+    <div class="r-center r-stars">********************************</div>
+    <div class="r-dash"></div>
+    <div class="r-line">తేదీ / Date: ${s.date}</div>
+    <div class="r-line">రైతు / Farmer: ${escapeHtml(s.farmerName)}</div>
+    ${villageRow}
+    <div class="r-line">ధాన్యం / Grain: ${escapeHtml(s.grainType)}</div>
+    <div class="r-dash"></div>
+    <div class="r-row"><span>బస్తాలు / Bags</span><span>${s.bags}</span></div>
+    <div class="r-row"><span>బరువు / Weight</span><span>${s.weightKg} kg</span></div>
+    <div class="r-row"><span>రేటు / Rate (₹/qtl)</span><span>${fmt(s.rate)}</span></div>
+    <div class="r-row"><span>విలువ / Value</span><span>${fmt(baseTotal)}</span></div>
+    <div class="r-row"><span>+ బస్తా ఖర్చు / Bag Charge</span><span>${fmt(bagCharge)}</span></div>
+    <div class="r-dash"></div>
+    <div class="r-row"><span>TOTAL</span><span>${fmt(s.total)}</span></div>
+    <div class="r-row"><span>COMMISSION (${s.commissionPct}%)</span><span>-${fmt(s.commission)}</span></div>
+    ${hamaliRow}
+    ${otherRow}
+    <div class="r-dash"></div>
+    <div class="r-row bold"><span>NET PAYABLE</span><span>${fmt(s.net)}</span></div>
+    <div class="r-dash"></div>
+    <div class="r-thanks r-center">**********THANK YOU!**********</div>
+    <div class="barcode"></div>
   `;
 }
 
