@@ -342,6 +342,7 @@ footer{
 }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
 <header class="topbar">
@@ -487,7 +488,7 @@ footer{
     <div id="receiptPaper" class="receipt-paper"></div>
     <textarea id="receiptText" class="visually-hidden" readonly></textarea>
     <div class="modal-actions">
-      <button id="sharePhotoBtn" class="primary-btn" data-te="WhatsApp లో ఫోటో పంపండి" data-en="Send Photo via WhatsApp">WhatsApp లో ఫోటో పంపండి</button>
+      <button id="sharePhotoBtn" class="primary-btn" data-te="WhatsApp లో PDF పంపండి" data-en="Send PDF via WhatsApp">WhatsApp లో PDF పంపండి</button>
       <a id="whatsappLink" class="secondary-btn" target="_blank" rel="noopener" data-te="టెక్స్ట్ పంపండి" data-en="Send as Text">టెక్స్ట్ పంపండి</a>
       <button id="printReceipt" class="secondary-btn" data-te="ప్రింట్" data-en="Print">ప్రింట్</button>
       <button id="copyReceipt" class="secondary-btn" data-te="కాపీ చేయండి" data-en="Copy Text">కాపీ చేయండి</button>
@@ -496,12 +497,39 @@ footer{
   </div>
 </div>
 
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 <script>
+const firebaseConfig = {
+  apiKey: "AIzaSyA5BhxW09PZ4VLWoMujeWhWdGK2dn9NxGU",
+  authDomain: "khammam-grain-market.firebaseapp.com",
+  projectId: "khammam-grain-market",
+  storageBucket: "khammam-grain-market.firebasestorage.app",
+  messagingSenderId: "823867446516",
+  appId: "1:823867446516:web:6432f008b399a4fd4f3aa1"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const salesCollection = db.collection('khammam_sales');
+
 const STORAGE_KEY = 'khammam_grain_sales_v1';
 const LANG_KEY = 'khammam_grain_lang';
 
 let sales = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
 let lang = localStorage.getItem(LANG_KEY) || 'te';
+let firestoreReady = false;
+
+salesCollection.onSnapshot(snapshot => {
+  sales = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+  firestoreReady = true;
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(sales));
+  render();
+}, err => {
+  console.error('Firestore sync error:', err);
+  alert(lang === 'te'
+    ? 'డేటా సింక్ కావడంలో సమస్య. ఇంటర్నెట్ చెక్ చేయండి.'
+    : 'Could not sync data. Please check your internet connection.');
+});
 
 const $ = (id) => document.getElementById(id);
 
@@ -654,10 +682,6 @@ function updatePreview(){
   el.addEventListener('input', updatePreview)
 );
 
-function saveAll(){
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(sales));
-}
-
 function resetForm(){
   form.reset();
   editIdInput.value = '';
@@ -670,7 +694,7 @@ function resetForm(){
   form.querySelector('.primary-btn').textContent = lang === 'te' ? 'సేవ్ చేయండి' : 'Save Entry';
 }
 
-form.addEventListener('submit', (e) => {
+form.addEventListener('submit', async (e) => {
   e.preventDefault();
   const bags1 = parseFloat(bagsInput.value) || 0;
   const weightKg = parseFloat(weightInput.value) || 0;
@@ -682,8 +706,7 @@ form.addEventListener('submit', (e) => {
   const lots = extraLots.filter(l => l.bags > 0);
   const { baseTotal, bagCharge, total, commission, hamali, net } = computeTotals(totalBags, totalValue, commissionPct, hamaliRate, otherDeduction);
 
-  const entry = {
-    id: editIdInput.value || crypto.randomUUID(),
+  const entryData = {
     date: dateInput.value,
     farmerName: farmerName.value.trim(),
     farmerPhone: farmerPhone.value.trim(),
@@ -695,16 +718,25 @@ form.addEventListener('submit', (e) => {
     total, commission, net
   };
 
-  if (editIdInput.value){
-    const idx = sales.findIndex(s => s.id === editIdInput.value);
-    if (idx !== -1) sales[idx] = entry;
-  } else {
-    sales.push(entry);
+  const btn = form.querySelector('.primary-btn');
+  const savingText = lang === 'te' ? 'సేవ్ అవుతోంది...' : 'Saving...';
+  const original = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = savingText;
+  try {
+    if (editIdInput.value){
+      await salesCollection.doc(editIdInput.value).set(entryData);
+    } else {
+      await salesCollection.add(entryData);
+    }
+    resetForm();
+  } catch (err) {
+    console.error(err);
+    alert(lang === 'te' ? 'సేవ్ చేయడంలో సమస్య వచ్చింది. ఇంటర్నెట్ చెక్ చేయండి.' : 'Could not save. Please check your internet connection.');
+  } finally {
+    btn.disabled = false;
+    if (btn.textContent === savingText) btn.textContent = original;
   }
-
-  saveAll();
-  resetForm();
-  render();
 });
 
 $('resetForm').addEventListener('click', resetForm);
@@ -732,12 +764,15 @@ function editEntry(id){
   form.scrollIntoView({ behavior: 'smooth' });
 }
 
-function deleteEntry(id){
+async function deleteEntry(id){
   const confirmMsg = lang === 'te' ? 'ఈ ఎంట్రీని తొలగించాలా?' : 'Delete this entry?';
   if (!confirm(confirmMsg)) return;
-  sales = sales.filter(s => s.id !== id);
-  saveAll();
-  render();
+  try {
+    await salesCollection.doc(id).delete();
+  } catch (err) {
+    console.error(err);
+    alert(lang === 'te' ? 'తొలగించడంలో సమస్య వచ్చింది.' : 'Could not delete. Please check your internet connection.');
+  }
 }
 
 function getFiltered(){
@@ -936,16 +971,29 @@ function shareReceipt(id){
 }
 
 async function shareReceiptAsPhoto(){
-  if (!currentReceiptSale || typeof html2canvas === 'undefined') return;
+  if (!currentReceiptSale || typeof html2canvas === 'undefined' || typeof window.jspdf === 'undefined') return;
   const btn = sharePhotoBtn;
   const originalText = btn.textContent;
   btn.textContent = lang === 'te' ? 'తయారు చేస్తోంది...' : 'Preparing...';
   btn.disabled = true;
   try {
     const canvas = await html2canvas(receiptPaper, { scale: 2, backgroundColor: '#ffffff' });
-    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
-    const fileName = `receipt_${(currentReceiptSale.farmerName || 'farmer').replace(/\s+/g,'_')}_${currentReceiptSale.date}.png`;
-    const file = new File([blob], fileName, { type: 'image/png' });
+    const imgData = canvas.toDataURL('image/png');
+
+    const { jsPDF } = window.jspdf;
+    const pxToMm = px => px * 25.4 / 96;
+    const pdfWidth = pxToMm(canvas.width / 2);
+    const pdfHeight = pxToMm(canvas.height / 2);
+    const pdf = new jsPDF({
+      orientation: pdfWidth > pdfHeight ? 'landscape' : 'portrait',
+      unit: 'mm',
+      format: [pdfWidth, pdfHeight]
+    });
+    pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+    const blob = pdf.output('blob');
+
+    const fileName = `receipt_${(currentReceiptSale.farmerName || 'farmer').replace(/\s+/g,'_')}_${currentReceiptSale.date}.pdf`;
+    const file = new File([blob], fileName, { type: 'application/pdf' });
 
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
       await navigator.share({ files: [file], title: 'Farmer Receipt' });
@@ -957,12 +1005,12 @@ async function shareReceiptAsPhoto(){
       a.click();
       URL.revokeObjectURL(url);
       alert(lang === 'te'
-        ? 'రసీదు ఫోటో డౌన్‌లోడ్ అయ్యింది. దీన్ని WhatsApp లో అటాచ్ చేసి పంపండి.'
-        : 'Receipt photo downloaded. Attach it in WhatsApp to send.');
+        ? 'రసీదు PDF డౌన్‌లోడ్ అయ్యింది. దీన్ని WhatsApp లో అటాచ్ చేసి పంపండి.'
+        : 'Receipt PDF downloaded. Attach it in WhatsApp to send.');
     }
   } catch (err) {
     if (err.name !== 'AbortError') {
-      alert(lang === 'te' ? 'ఫోటో తయారు చేయడంలో సమస్య వచ్చింది.' : 'Could not prepare the photo.');
+      alert(lang === 'te' ? 'PDF తయారు చేయడంలో సమస్య వచ్చింది.' : 'Could not prepare the PDF.');
     }
   } finally {
     btn.textContent = originalText;
