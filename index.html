@@ -84,6 +84,31 @@ input:focus,select:focus{outline:2px solid var(--primary);outline-offset:1px;}
   font-size:.9rem;
 }
 .calc-preview b{color:var(--accent);}
+.lot2-toggle-wrap{grid-column:1/-1;}
+.lot2-toggle-wrap .secondary-btn{padding:8px 14px;font-size:.85rem;}
+.extra-lots{display:contents;}
+.extra-lot-row{
+  grid-column:1/-1;
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+  gap:12px;
+  align-items:end;
+  background:#faf6ee;
+  border:1px dashed var(--border);
+  border-radius:8px;
+  padding:10px;
+  margin:2px 0;
+}
+.extra-lot-row .lot-remove-btn{
+  padding:8px 12px;
+  font-size:.8rem;
+  color:var(--danger);
+  border:1px solid var(--border);
+  background:#fff;
+  border-radius:8px;
+  cursor:pointer;
+  height:fit-content;
+}
 .form-actions{grid-column:1/-1;display:flex;gap:10px;}
 .primary-btn{
   background:var(--primary);
@@ -372,7 +397,9 @@ footer{
           <option value="వరి / Paddy">వరి / Paddy</option>
           <option value="మొక్కజొన్న / Maize">మొక్కజొన్న / Maize</option>
           <option value="పత్తి / Cotton">పత్తి / Cotton</option>
+          <option value="2వ రకం పత్తి / 2nd Quality Cotton">2వ రకం పత్తి / 2nd Quality Cotton</option>
           <option value="మిర్చి / Chilli">మిర్చి / Chilli</option>
+          <option value="తెల్ల మిర్చి / White Chilli">తెల్ల మిర్చి / White Chilli</option>
           <option value="పప్పు దినుసులు / Pulses">పప్పు దినుసులు / Pulses</option>
           <option value="ఇతర / Other">ఇతర / Other</option>
         </select>
@@ -389,6 +416,13 @@ footer{
         <span data-te="రేటు (₹ / క్వింటాల్)" data-en="Rate (₹ / Quintal)">రేటు (₹ / క్వింటాల్)</span>
         <input type="number" id="rate" min="0" step="0.01" required>
       </label>
+
+      <div id="extraLotsContainer" class="extra-lots"></div>
+
+      <div class="lot2-toggle-wrap">
+        <button type="button" id="addLotBtn" class="secondary-btn" data-te="+ మరో ధాన్యం రకం జోడించండి" data-en="+ Add Another Grain Type">+ మరో ధాన్యం రకం జోడించండి</button>
+      </div>
+
       <label>
         <span data-te="కమిషన్ %" data-en="Commission %">కమిషన్ %</span>
         <input type="number" id="commissionPct" min="0" step="0.01" value="2">
@@ -495,6 +529,71 @@ function formatTwoDecimalsOnBlur(el){
 }
 [weightInput, hamaliRateInput].forEach(formatTwoDecimalsOnBlur);
 
+const GRAIN_OPTIONS = [
+  'వరి / Paddy','మొక్కజొన్న / Maize','పత్తి / Cotton','2వ రకం పత్తి / 2nd Quality Cotton',
+  'మిర్చి / Chilli','తెల్ల మిర్చి / White Chilli','పప్పు దినుసులు / Pulses','ఇతర / Other'
+];
+const extraLotsContainer = $('extraLotsContainer');
+const addLotBtn = $('addLotBtn');
+let extraLotSeq = 0;
+
+function addExtraLot(values){
+  const rowId = 'lot' + (++extraLotSeq);
+  const row = document.createElement('div');
+  row.className = 'extra-lot-row';
+  row.dataset.rowId = rowId;
+  const grainLabel = lang === 'te' ? 'ధాన్యం రకం' : 'Grain Type';
+  const bagsLabel = lang === 'te' ? 'బస్తాలు' : 'Bags';
+  const weightLabel = lang === 'te' ? 'బరువు (క్వింటాళ్లు)' : 'Weight (Quintals)';
+  const rateLabel = lang === 'te' ? 'రేటు (₹ / క్వింటాల్)' : 'Rate (₹ / Quintal)';
+  const removeLabel = lang === 'te' ? 'తీసివేయండి' : 'Remove';
+  row.innerHTML = `
+    <label><span>${grainLabel}</span>
+      <select class="lot-grain">${GRAIN_OPTIONS.map(g => `<option value="${g}">${g}</option>`).join('')}</select>
+    </label>
+    <label><span>${bagsLabel}</span><input type="number" class="lot-bags" min="0" step="1"></label>
+    <label><span>${weightLabel}</span><input type="number" class="lot-weight" min="0" step="0.01"></label>
+    <label><span>${rateLabel}</span><input type="number" class="lot-rate" min="0" step="0.01"></label>
+    <button type="button" class="lot-remove-btn">✕ ${removeLabel}</button>
+  `;
+  extraLotsContainer.appendChild(row);
+
+  const grainSel = row.querySelector('.lot-grain');
+  const bagsEl = row.querySelector('.lot-bags');
+  const weightEl = row.querySelector('.lot-weight');
+  const rateEl = row.querySelector('.lot-rate');
+  const removeBtn = row.querySelector('.lot-remove-btn');
+
+  if (values){
+    grainSel.value = values.grainType;
+    bagsEl.value = values.bags;
+    weightEl.value = (values.weightKg || 0).toFixed(2);
+    rateEl.value = values.rate;
+  }
+
+  [bagsEl, weightEl, rateEl, grainSel].forEach(el => el.addEventListener('input', updatePreview));
+  formatTwoDecimalsOnBlur(weightEl);
+  removeBtn.addEventListener('click', () => {
+    row.remove();
+    updatePreview();
+  });
+}
+
+function clearExtraLots(){
+  extraLotsContainer.innerHTML = '';
+}
+
+function getExtraLots(){
+  return Array.from(extraLotsContainer.querySelectorAll('.extra-lot-row')).map(row => ({
+    grainType: row.querySelector('.lot-grain').value,
+    bags: parseFloat(row.querySelector('.lot-bags').value) || 0,
+    weightKg: parseFloat(row.querySelector('.lot-weight').value) || 0,
+    rate: parseFloat(row.querySelector('.lot-rate').value) || 0
+  }));
+}
+
+addLotBtn.addEventListener('click', () => addExtraLot());
+
 const prevEffRate = $('prevEffRate');
 const prevBagCharge = $('prevBagCharge');
 const prevTotal = $('prevTotal');
@@ -511,21 +610,34 @@ function fmt(n){
   return '₹' + (n || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-function computeTotals(bags, weightQtl, rate, commissionPct, hamaliRate, otherDeduction){
-  const baseTotal = (weightQtl || 0) * (rate || 0);
+function getEntryLots(s){
+  return s.lots || (s.lot2 ? [s.lot2] : []);
+}
+
+function computeTotals(bags, baseTotal, commissionPct, hamaliRate, otherDeduction){
   const bagCharge = (bags || 0) * BAG_CHARGE_RATE;
-  const total = baseTotal + bagCharge;
+  const total = (baseTotal || 0) + bagCharge;
   const commission = total * ((commissionPct || 0) / 100);
   const hamali = (bags || 0) * (hamaliRate || 0);
   const net = total - commission - hamali - (otherDeduction || 0);
-  return { baseTotal, bagCharge, total, commission, hamali, net };
+  return { baseTotal: (baseTotal || 0), bagCharge, total, commission, hamali, net };
+}
+
+function getLotTotals(){
+  const bags1 = parseFloat(bagsInput.value) || 0;
+  const weight1 = parseFloat(weightInput.value) || 0;
+  const rate1 = parseFloat(rateInput.value) || 0;
+  const extraLots = getExtraLots();
+  const extraBags = extraLots.reduce((a, l) => a + l.bags, 0);
+  const extraValue = extraLots.reduce((a, l) => a + l.weightKg * l.rate, 0);
+  return { totalBags: bags1 + extraBags, totalValue: (weight1 * rate1) + extraValue, extraLots };
 }
 
 function updatePreview(){
+  const { totalBags, totalValue } = getLotTotals();
   const { baseTotal, bagCharge, total, commission, hamali, net } = computeTotals(
-    parseFloat(bagsInput.value),
-    parseFloat(weightInput.value),
-    parseFloat(rateInput.value),
+    totalBags,
+    totalValue,
     parseFloat(commissionPctInput.value),
     parseFloat(hamaliRateInput.value),
     parseFloat(otherDeductionInput.value)
@@ -553,19 +665,22 @@ function resetForm(){
   commissionPctInput.value = 2;
   hamaliRateInput.value = 0;
   otherDeductionInput.value = 0;
+  clearExtraLots();
   updatePreview();
   form.querySelector('.primary-btn').textContent = lang === 'te' ? 'సేవ్ చేయండి' : 'Save Entry';
 }
 
 form.addEventListener('submit', (e) => {
   e.preventDefault();
-  const bags = parseFloat(bagsInput.value) || 0;
+  const bags1 = parseFloat(bagsInput.value) || 0;
   const weightKg = parseFloat(weightInput.value) || 0;
   const rate = parseFloat(rateInput.value) || 0;
   const commissionPct = parseFloat(commissionPctInput.value) || 0;
   const hamaliRate = parseFloat(hamaliRateInput.value) || 0;
   const otherDeduction = parseFloat(otherDeductionInput.value) || 0;
-  const { baseTotal, bagCharge, total, commission, hamali, net } = computeTotals(bags, weightKg, rate, commissionPct, hamaliRate, otherDeduction);
+  const { totalBags, totalValue, extraLots } = getLotTotals();
+  const lots = extraLots.filter(l => l.bags > 0);
+  const { baseTotal, bagCharge, total, commission, hamali, net } = computeTotals(totalBags, totalValue, commissionPct, hamaliRate, otherDeduction);
 
   const entry = {
     id: editIdInput.value || crypto.randomUUID(),
@@ -574,8 +689,9 @@ form.addEventListener('submit', (e) => {
     farmerPhone: farmerPhone.value.trim(),
     village: village.value.trim(),
     grainType: grainType.value,
-    bags,
-    weightKg, rate, baseTotal, bagCharge, commissionPct, hamaliRate, hamali, otherDeduction,
+    bags: bags1,
+    weightKg, rate, lots, totalBags,
+    baseTotal, bagCharge, commissionPct, hamaliRate, hamali, otherDeduction,
     total, commission, net
   };
 
@@ -608,6 +724,9 @@ function editEntry(id){
   hamaliRateInput.value = (s.hamaliRate != null ? s.hamaliRate : 0).toFixed(2);
   otherDeductionInput.value = s.otherDeduction;
   editIdInput.value = s.id;
+  clearExtraLots();
+  const existingLots = s.lots || (s.lot2 ? [s.lot2] : []);
+  existingLots.forEach(l => addExtraLot(l));
   updatePreview();
   form.querySelector('.primary-btn').textContent = lang === 'te' ? 'నవీకరించండి' : 'Update Entry';
   form.scrollIntoView({ behavior: 'smooth' });
@@ -649,16 +768,23 @@ function render(){
   const bagChargeLabel = lang === 'te' ? 'బస్తా ఖర్చు' : 'Bag Charge';
   const netLabel = lang === 'te' ? 'చెల్లించవలసినది' : 'Net Payable';
 
+  const extraLabel = lang === 'te' ? 'రకం' : 'Type';
+
   filtered.forEach(s => {
     const card = document.createElement('div');
     card.className = 'record-card';
+    const totalBags = s.totalBags != null ? s.totalBags : s.bags;
     const baseTotal = s.baseTotal != null ? s.baseTotal : ((s.weightKg || 0) * (s.rate || 0));
-    const bagCharge = s.bagCharge != null ? s.bagCharge : (s.bags || 0) * 40;
+    const bagCharge = s.bagCharge != null ? s.bagCharge : (totalBags || 0) * 40;
+    const extraLotRows = getEntryLots(s).map((l, i) =>
+      `<div class="rc-row"><span>+ ${extraLabel} ${i+2}: ${escapeHtml(l.grainType)}</span><span>${l.bags} / ${(l.weightKg||0).toFixed(2)} qtl @ ${fmt(l.rate)}</span></div>`
+    ).join('');
     card.innerHTML = `
       <div class="rc-top"><span>${escapeHtml(s.farmerName)}</span><span class="rc-date">${s.date}</span></div>
       <div class="rc-sub">${escapeHtml(s.village || '')}${s.village ? ' · ' : ''}${escapeHtml(s.grainType)}</div>
-      <div class="rc-row"><span>${bagsLabel} / ${weightLabel}</span><span>${s.bags} / ${(s.weightKg || 0).toFixed(2)} qtl</span></div>
-      <div class="rc-row"><span>${rateLabel} (₹/qtl)</span><span>${fmt(s.rate)}</span></div>
+      <div class="rc-row"><span>${bagsLabel} / ${weightLabel}</span><span>${s.bags} / ${(s.weightKg || 0).toFixed(2)} qtl @ ${fmt(s.rate)}</span></div>
+      ${extraLotRows}
+      <div class="rc-row"><span>${bagsLabel} (మొత్తం/Total)</span><span>${totalBags}</span></div>
       <div class="rc-row"><span>${baseValLabel}</span><span>${fmt(baseTotal)}</span></div>
       <div class="rc-row"><span>+ ${bagChargeLabel}</span><span>${fmt(bagCharge)}</span></div>
       <div class="rc-row"><span>${totalLabel}</span><span>${fmt(s.total)}</span></div>
@@ -686,7 +812,7 @@ function render(){
 
   const totalSales = filtered.reduce((a,s) => a + s.total, 0);
   const totalCommission = filtered.reduce((a,s) => a + s.commission, 0);
-  const totalBags = filtered.reduce((a,s) => a + s.bags, 0);
+  const totalBags = filtered.reduce((a,s) => a + (s.totalBags != null ? s.totalBags : s.bags), 0);
 
   $('statTotalSales').textContent = fmt(totalSales);
   $('statTotalCommission').textContent = fmt(totalCommission);
@@ -701,18 +827,22 @@ function buildReceiptText(s){
     `రైతు / Farmer: ${s.farmerName}`,
   ];
   if (s.village) lines.push(`గ్రామం / Village: ${s.village}`);
+  const totalBags = s.totalBags != null ? s.totalBags : s.bags;
   const baseTotal = s.baseTotal != null ? s.baseTotal : ((s.weightKg || 0) * (s.rate || 0));
-  const bagCharge = s.bagCharge != null ? s.bagCharge : (s.bags || 0) * 40;
+  const bagCharge = s.bagCharge != null ? s.bagCharge : (totalBags || 0) * 40;
   lines.push(
     `ధాన్యం / Grain: ${s.grainType}`,
-    `బస్తాలు / Bags: ${s.bags}   బరువు / Weight: ${(s.weightKg || 0).toFixed(2)} qtl`,
-    `రేటు / Rate: ${fmt(s.rate)} / క్వి.`,
+    `బస్తాలు / Bags: ${s.bags}   బరువు / Weight: ${(s.weightKg || 0).toFixed(2)} qtl   రేటు / Rate: ${fmt(s.rate)}`
+  );
+  getEntryLots(s).forEach((l, i) => lines.push(`+ రకం ${i+2} / Type ${i+2}: ${l.grainType} — ${l.bags} బస్తాలు, ${(l.weightKg||0).toFixed(2)} qtl, ${fmt(l.rate)}`));
+  lines.push(
+    `మొత్తం బస్తాలు / Total Bags: ${totalBags}`,
     `విలువ (బరువు × రేటు) / Value: ${fmt(baseTotal)}`,
     `+ బస్తా ఖర్చు / Bag Charge: ${fmt(bagCharge)}`,
     `మొత్తం విలువ / Total Value: ${fmt(s.total)}`,
     `కమిషన్ / Commission (${s.commissionPct}%): ${fmt(s.commission)}`
   );
-  if (s.hamali) lines.push(`హమాలీ / Hamali (${s.bags} × ${fmt(s.hamaliRate || 0)}): ${fmt(s.hamali)}`);
+  if (s.hamali) lines.push(`హమాలీ / Hamali (${totalBags} × ${fmt(s.hamaliRate || 0)}): ${fmt(s.hamali)}`);
   if (s.otherDeduction) lines.push(`ఇతర ఖర్చులు / Other Deduction: ${fmt(s.otherDeduction)}`);
   lines.push('-----------------------------');
   lines.push(`రైతుకు చెల్లించవలసినది / Net Payable: ${fmt(s.net)}`);
@@ -720,11 +850,15 @@ function buildReceiptText(s){
 }
 
 function buildReceiptHTML(s){
+  const totalBags = s.totalBags != null ? s.totalBags : s.bags;
   const baseTotal = s.baseTotal != null ? s.baseTotal : ((s.weightKg || 0) * (s.rate || 0));
-  const bagCharge = s.bagCharge != null ? s.bagCharge : (s.bags || 0) * 40;
+  const bagCharge = s.bagCharge != null ? s.bagCharge : (totalBags || 0) * 40;
   const villageRow = s.village
     ? `<div class="r-line">గ్రామం / Village: ${escapeHtml(s.village)}</div>`
     : '';
+  const extraLotRows = getEntryLots(s).map((l, i) =>
+    `<div class="r-row"><span>+ రకం${i+2}: ${escapeHtml(l.grainType)}</span><span>${l.bags} / ${(l.weightKg||0).toFixed(2)} qtl @ ${fmt(l.rate)}</span></div>`
+  ).join('');
 
   const afterBagCharge = baseTotal + bagCharge;
   const afterCommission = afterBagCharge - s.commission;
@@ -732,7 +866,7 @@ function buildReceiptHTML(s){
 
   const hamaliStep = s.hamali
     ? `
-    <div class="w-row"><span class="w-op">-</span><span class="w-amt">${fmt(s.hamali)}</span><span class="w-lbl">Hamali (${s.bags} × ${fmt(s.hamaliRate||0)})</span></div>
+    <div class="w-row"><span class="w-op">-</span><span class="w-amt">${fmt(s.hamali)}</span><span class="w-lbl">Hamali (${totalBags} × ${fmt(s.hamaliRate||0)})</span></div>
     <div class="w-rule"></div>
     <div class="w-row"><span class="w-op"></span><span class="w-amt">${fmt(afterHamali)}</span><span class="w-lbl"></span></div>`
     : '';
@@ -756,6 +890,8 @@ function buildReceiptHTML(s){
     <div class="r-row"><span>బస్తాలు / Bags</span><span>${s.bags}</span></div>
     <div class="r-row"><span>బరువు / Weight</span><span>${(s.weightKg || 0).toFixed(2)} qtl</span></div>
     <div class="r-row"><span>రేటు / Rate (₹/qtl)</span><span>${fmt(s.rate)}</span></div>
+    ${extraLotRows}
+    <div class="r-row"><span>మొత్తం బస్తాలు / Total Bags</span><span>${totalBags}</span></div>
     <div class="r-dash"></div>
 
     <div class="w-block">
@@ -870,13 +1006,17 @@ $('clearFilter').addEventListener('click', () => {
 
 $('exportCsv').addEventListener('click', () => {
   const filtered = getFiltered();
-  const headers = ['Date','Farmer','Farmer Phone','Village','Grain Type','Bags','Weight(Qtl)','Rate(per Qtl)','Value(Wt×Rate)','Bag Charge','Total','Commission %','Commission','Hamali Rate','Hamali','Other Deduction','Net Payable'];
+  const headers = ['Date','Farmer','Farmer Phone','Village','Grain Type','Bags','Weight(Qtl)','Rate(per Qtl)','Extra Grain Types','Total Bags','Value(Wt×Rate)','Bag Charge','Total','Commission %','Commission','Hamali Rate','Hamali','Other Deduction','Net Payable'];
   const rows = filtered.map(s => {
+    const totalBags = s.totalBags != null ? s.totalBags : s.bags;
     const baseTotal = s.baseTotal != null ? s.baseTotal : ((s.weightKg||0) * (s.rate || 0));
-    const bagCharge = s.bagCharge != null ? s.bagCharge : (s.bags || 0) * 40;
+    const bagCharge = s.bagCharge != null ? s.bagCharge : (totalBags || 0) * 40;
+    const extraLotsText = getEntryLots(s).map(l => `${l.grainType}:${l.bags}x${l.weightKg}@${l.rate}`).join('; ');
     return [
       s.date, s.farmerName, s.farmerPhone, s.village || '', s.grainType, s.bags, s.weightKg,
-      s.rate, baseTotal.toFixed(2), bagCharge.toFixed(2), s.total.toFixed(2), s.commissionPct, s.commission.toFixed(2),
+      s.rate, extraLotsText,
+      totalBags,
+      baseTotal.toFixed(2), bagCharge.toFixed(2), s.total.toFixed(2), s.commissionPct, s.commission.toFixed(2),
       s.hamaliRate || 0, (s.hamali || 0).toFixed(2), s.otherDeduction, s.net.toFixed(2)
     ];
   });
