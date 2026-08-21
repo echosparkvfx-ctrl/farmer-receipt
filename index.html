@@ -349,7 +349,7 @@ footer{
 }
 
 @media print{
-  @page{ margin: 8mm; }
+  @page{ size: A4; margin: 8mm; }
   #appRoot, #loginScreen{display:none !important;}
   #receiptModal{
     position:static;
@@ -367,7 +367,15 @@ footer{
     display:block;
   }
   #receiptModal .modal-actions, #receiptModal textarea{display:none;}
-  .receipt-paper{width:80mm;margin:0 auto;box-shadow:none;position:static;}
+  .receipt-paper{
+    width:80mm;
+    box-shadow:none;
+    position:absolute;
+    left:50%;
+    transform:translateX(-50%);
+    top:0;
+  }
+  body.print-bottom-half .receipt-paper{ top:140mm; }
   .receipt-paper::before, .receipt-paper::after{display:none;}
 }
 </style>
@@ -1109,7 +1117,14 @@ $('closeReceipt').addEventListener('click', () => receiptModal.classList.add('hi
 receiptModal.addEventListener('click', (e) => {
   if (e.target === receiptModal) receiptModal.classList.add('hidden');
 });
-$('printReceipt').addEventListener('click', () => window.print());
+const PRINT_HALF_KEY = 'khammam_print_half_last';
+$('printReceipt').addEventListener('click', () => {
+  const lastUsed = localStorage.getItem(PRINT_HALF_KEY) || 'bottom';
+  const thisHalf = lastUsed === 'top' ? 'bottom' : 'top';
+  document.body.classList.toggle('print-bottom-half', thisHalf === 'bottom');
+  localStorage.setItem(PRINT_HALF_KEY, thisHalf);
+  window.print();
+});
 $('copyReceipt').addEventListener('click', async () => {
   const btn = $('copyReceipt');
   receiptText.select();
