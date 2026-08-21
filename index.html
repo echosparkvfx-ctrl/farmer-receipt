@@ -364,7 +364,7 @@ footer{
         <input type="number" id="bags" min="0" step="1">
       </label>
       <label>
-        <span data-te="బరువు (కిలోలు)" data-en="Weight (KG)">బరువు (కిలోలు)</span>
+        <span data-te="బరువు (క్వింటాళ్లు)" data-en="Weight (Quintals)">బరువు (క్వింటాళ్లు)</span>
         <input type="number" id="weight" min="0" step="0.01" required>
       </label>
       <label>
@@ -493,11 +493,11 @@ function fmt(n){
   return '₹' + (n || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-function computeTotals(bags, weightKg, rate, commissionPct, hamaliRate, otherDeduction){
-  const baseTotal = (weightKg || 0) / 100 * (rate || 0);
+function computeTotals(bags, weightQtl, rate, commissionPct, hamaliRate, otherDeduction){
+  const baseTotal = (weightQtl || 0) * (rate || 0);
   const bagCharge = (bags || 0) * BAG_CHARGE_RATE;
   const total = baseTotal + bagCharge;
-  const commission = baseTotal * ((commissionPct || 0) / 100);
+  const commission = total * ((commissionPct || 0) / 100);
   const hamali = (bags || 0) * (hamaliRate || 0);
   const net = total - commission - hamali - (otherDeduction || 0);
   return { baseTotal, bagCharge, total, commission, hamali, net };
@@ -634,12 +634,12 @@ function render(){
   filtered.forEach(s => {
     const card = document.createElement('div');
     card.className = 'record-card';
-    const baseTotal = s.baseTotal != null ? s.baseTotal : ((s.weightKg || 0)/100 * (s.rate || 0));
+    const baseTotal = s.baseTotal != null ? s.baseTotal : ((s.weightKg || 0) * (s.rate || 0));
     const bagCharge = s.bagCharge != null ? s.bagCharge : (s.bags || 0) * 40;
     card.innerHTML = `
       <div class="rc-top"><span>${escapeHtml(s.farmerName)}</span><span class="rc-date">${s.date}</span></div>
       <div class="rc-sub">${escapeHtml(s.village || '')}${s.village ? ' · ' : ''}${escapeHtml(s.grainType)}</div>
-      <div class="rc-row"><span>${bagsLabel} / ${weightLabel}</span><span>${s.bags} / ${(s.weightKg || 0).toFixed(2)} kg</span></div>
+      <div class="rc-row"><span>${bagsLabel} / ${weightLabel}</span><span>${s.bags} / ${(s.weightKg || 0).toFixed(2)} qtl</span></div>
       <div class="rc-row"><span>${rateLabel} (₹/qtl)</span><span>${fmt(s.rate)}</span></div>
       <div class="rc-row"><span>${baseValLabel}</span><span>${fmt(baseTotal)}</span></div>
       <div class="rc-row"><span>+ ${bagChargeLabel}</span><span>${fmt(bagCharge)}</span></div>
@@ -683,11 +683,11 @@ function buildReceiptText(s){
     `రైతు / Farmer: ${s.farmerName}`,
   ];
   if (s.village) lines.push(`గ్రామం / Village: ${s.village}`);
-  const baseTotal = s.baseTotal != null ? s.baseTotal : ((s.weightKg || 0)/100 * (s.rate || 0));
+  const baseTotal = s.baseTotal != null ? s.baseTotal : ((s.weightKg || 0) * (s.rate || 0));
   const bagCharge = s.bagCharge != null ? s.bagCharge : (s.bags || 0) * 40;
   lines.push(
     `ధాన్యం / Grain: ${s.grainType}`,
-    `బస్తాలు / Bags: ${s.bags}   బరువు / Weight: ${(s.weightKg || 0).toFixed(2)} kg`,
+    `బస్తాలు / Bags: ${s.bags}   బరువు / Weight: ${(s.weightKg || 0).toFixed(2)} qtl`,
     `రేటు / Rate: ${fmt(s.rate)} / క్వి.`,
     `విలువ (బరువు × రేటు) / Value: ${fmt(baseTotal)}`,
     `+ బస్తా ఖర్చు / Bag Charge: ${fmt(bagCharge)}`,
@@ -702,7 +702,7 @@ function buildReceiptText(s){
 }
 
 function buildReceiptHTML(s){
-  const baseTotal = s.baseTotal != null ? s.baseTotal : ((s.weightKg || 0)/100 * (s.rate || 0));
+  const baseTotal = s.baseTotal != null ? s.baseTotal : ((s.weightKg || 0) * (s.rate || 0));
   const bagCharge = s.bagCharge != null ? s.bagCharge : (s.bags || 0) * 40;
   const villageRow = s.village
     ? `<div class="r-line">గ్రామం / Village: ${escapeHtml(s.village)}</div>`
@@ -724,7 +724,7 @@ function buildReceiptHTML(s){
     <div class="r-line">ధాన్యం / Grain: ${escapeHtml(s.grainType)}</div>
     <div class="r-dash"></div>
     <div class="r-row"><span>బస్తాలు / Bags</span><span>${s.bags}</span></div>
-    <div class="r-row"><span>బరువు / Weight</span><span>${(s.weightKg || 0).toFixed(2)} kg</span></div>
+    <div class="r-row"><span>బరువు / Weight</span><span>${(s.weightKg || 0).toFixed(2)} qtl</span></div>
     <div class="r-row"><span>రేటు / Rate (₹/qtl)</span><span>${fmt(s.rate)}</span></div>
     <div class="r-row"><span>విలువ / Value</span><span>${fmt(baseTotal)}</span></div>
     <div class="r-row"><span>+ బస్తా ఖర్చు / Bag Charge</span><span>${fmt(bagCharge)}</span></div>
@@ -833,9 +833,9 @@ $('clearFilter').addEventListener('click', () => {
 
 $('exportCsv').addEventListener('click', () => {
   const filtered = getFiltered();
-  const headers = ['Date','Farmer','Farmer Phone','Village','Grain Type','Bags','Weight(Kg)','Rate(per Qtl)','Value(Wt×Rate)','Bag Charge','Total','Commission %','Commission','Hamali Rate','Hamali','Other Deduction','Net Payable'];
+  const headers = ['Date','Farmer','Farmer Phone','Village','Grain Type','Bags','Weight(Qtl)','Rate(per Qtl)','Value(Wt×Rate)','Bag Charge','Total','Commission %','Commission','Hamali Rate','Hamali','Other Deduction','Net Payable'];
   const rows = filtered.map(s => {
-    const baseTotal = s.baseTotal != null ? s.baseTotal : ((s.weightKg||0)/100 * (s.rate || 0));
+    const baseTotal = s.baseTotal != null ? s.baseTotal : ((s.weightKg||0) * (s.rate || 0));
     const bagCharge = s.bagCharge != null ? s.bagCharge : (s.bags || 0) * 40;
     return [
       s.date, s.farmerName, s.farmerPhone, s.village || '', s.grainType, s.bags, s.weightKg,
