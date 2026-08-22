@@ -389,6 +389,10 @@ footer{
   }
   body.print-bottom-half .receipt-paper{ top:140mm; }
   .receipt-paper::before, .receipt-paper::after{display:none;}
+  .r-row, .w-row, .r-line, .r-dash, .w-block, .r-net, .rc-net{
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
 }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
