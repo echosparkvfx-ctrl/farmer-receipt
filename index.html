@@ -311,6 +311,18 @@ footer{
 .r-row{display:flex;justify-content:space-between;gap:10px;font-size:.82rem;padding:2px 0;}
 .r-row.bold{font-weight:700;font-size:.92rem;}
 .r-thanks{font-size:.78rem;letter-spacing:1px;margin:10px 0 4px;text-align:center;}
+.receipt-paper.thermal-mode{ width:219px; padding:12px 8px 16px; }
+.receipt-paper.thermal-mode .r-title{font-size:.85rem;}
+.receipt-paper.thermal-mode .r-stars{font-size:.6rem;}
+.receipt-paper.thermal-mode .r-line{font-size:.62rem;line-height:1.35;}
+.receipt-paper.thermal-mode .r-row{font-size:.62rem;gap:6px;}
+.receipt-paper.thermal-mode .r-row.bold{font-size:.7rem;}
+.receipt-paper.thermal-mode .r-thanks{font-size:.6rem;}
+.receipt-paper.thermal-mode .w-row{grid-template-columns:10px 62px 1fr;gap:4px;font-size:.62rem;}
+.receipt-paper.thermal-mode .w-lbl{font-size:.55rem;}
+.receipt-paper.thermal-mode .w-rule{width:74px;margin:2px 0 2px 10px;}
+.receipt-paper.thermal-mode .barcode{height:30px;}
+
 .barcode{
   height:42px;
   margin-top:8px;
@@ -1069,8 +1081,9 @@ async function shareReceiptAsPhoto(){
   const originalText = btn.textContent;
   btn.textContent = lang === 'te' ? 'తయారు చేస్తోంది...' : 'Preparing...';
   btn.disabled = true;
+  receiptPaper.classList.add('thermal-mode');
   try {
-    const canvas = await html2canvas(receiptPaper, { scale: 2, backgroundColor: '#ffffff' });
+    const canvas = await html2canvas(receiptPaper, { scale: 3, backgroundColor: '#ffffff' });
     const imgData = canvas.toDataURL('image/png');
 
     const { jsPDF } = window.jspdf;
@@ -1106,6 +1119,7 @@ async function shareReceiptAsPhoto(){
       alert(lang === 'te' ? 'PDF తయారు చేయడంలో సమస్య వచ్చింది.' : 'Could not prepare the PDF.');
     }
   } finally {
+    receiptPaper.classList.remove('thermal-mode');
     btn.textContent = originalText;
     btn.disabled = false;
   }
