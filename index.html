@@ -1137,6 +1137,13 @@ receiptModal.addEventListener('click', (e) => {
 });
 const PRINT_HALF_KEY = 'khammam_print_half_last';
 $('printReceipt').addEventListener('click', () => {
+  const heightMm = receiptPaper.getBoundingClientRect().height * 25.4 / 96;
+  const fitsInHalf = heightMm <= 125;
+  if (!fitsInHalf) {
+    document.body.classList.remove('print-bottom-half');
+    window.print();
+    return;
+  }
   const lastUsed = localStorage.getItem(PRINT_HALF_KEY) || 'bottom';
   const thisHalf = lastUsed === 'top' ? 'bottom' : 'top';
   document.body.classList.toggle('print-bottom-half', thisHalf === 'bottom');
